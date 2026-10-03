@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DoodleCut ✂️ — CapCut для твоїх скетчів</title>
+  <title>DoodleCut ✂️ — Excalidraw Animator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
@@ -18,6 +17,7 @@
       --coral: #ff7675;
       --mint: #55efc4;
       --accent: #fdcb6e;
+      --recording: #e74c3c;
       --border-hand: 255px 15px 225px 15px/15px 225px 15px 255px;
       --shadow-sketch: 3px 3px 0px var(--ink);
       --font-doodle: 'Caveat', cursive, sans-serif;
@@ -71,6 +71,17 @@
     button.primary { background: var(--yellow); font-weight: bold; }
     button.coral { background: var(--coral); color: #fff; }
     button.mint { background: var(--mint); }
+    button.record-btn { background: #ffebee; border-color: var(--recording); color: var(--recording); font-weight: bold; }
+    button.recording {
+      background: var(--recording) !important;
+      color: #fff !important;
+      animation: pulse-red 1s infinite alternate;
+    }
+
+    @keyframes pulse-red {
+      0% { transform: scale(1); box-shadow: 0 0 4px var(--recording); }
+      100% { transform: scale(1.04); box-shadow: 0 0 14px var(--recording); }
+    }
 
     /* HEADER */
     header {
@@ -111,7 +122,7 @@
     main {
       flex: 1;
       display: grid;
-      grid-template-columns: 240px 1fr 280px;
+      grid-template-columns: 260px 1fr 290px;
       overflow: hidden;
     }
 
@@ -133,6 +144,9 @@
       font-weight: 700;
       border-bottom: 2px dashed var(--ink);
       padding-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     /* CANVAS AREA */
@@ -189,7 +203,7 @@
 
     /* TIMELINE CONTAINER */
     .timeline-wrap {
-      height: 230px;
+      height: 240px;
       background: var(--paper);
       border-top: 2.5px solid var(--ink);
       display: flex;
@@ -271,14 +285,14 @@
 
     /* TRACK ROWS */
     .track-lane {
-      height: 42px;
+      height: 44px;
       border-bottom: 1.5px dashed #ccc;
       position: relative;
       display: flex;
       align-items: center;
     }
 
-    /* CLIP BLOCK (CAPCUT STYLE STRIP) */
+    /* CLIP BLOCK */
     .clip-block {
       position: absolute;
       top: 4px;
@@ -322,7 +336,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 8px;
+      font-size: 9px;
     }
 
     .trim-left { left: 0; border-right: 1.5px solid var(--ink); }
@@ -330,6 +344,91 @@
 
     .trim-handle:hover {
       background: var(--coral);
+      color: #fff;
+    }
+
+    /* STORYBOARD LIST ITEMS */
+    .story-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff;
+      border: 1.5px solid var(--ink);
+      border-radius: 6px;
+      padding: 4px 6px;
+      cursor: pointer;
+    }
+    .story-item.active {
+      background: var(--yellow);
+      font-weight: bold;
+    }
+    .story-thumb {
+      width: 32px;
+      height: 24px;
+      object-fit: cover;
+      border: 1px solid var(--ink);
+      border-radius: 3px;
+      background: #eee;
+    }
+
+    /* TOAST NOTIFICATION */
+    #toast {
+      position: fixed;
+      bottom: 260px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink);
+      color: #fff;
+      padding: 7px 18px;
+      border-radius: 20px;
+      font-size: 15px;
+      font-family: var(--font-body);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+      z-index: 99999;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* MODAL EXPORT OVERLAY */
+    #export-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26,24,22,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+    .export-card {
+      background: #fff;
+      border: 3px solid var(--ink);
+      border-radius: var(--border-hand);
+      padding: 24px;
+      width: 360px;
+      text-align: center;
+      box-shadow: 6px 6px 0 var(--ink);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .progress-bar {
+      height: 18px;
+      background: #eee;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--mint);
+      transition: width 0.1s linear;
     }
 
     /* Drop Zone Overlay */
@@ -353,11 +452,24 @@
 <body>
 
   <div id="drop-screen">
-    <div>✂️ КИДАЙ СКРІНИ / ЗВУК СЮДИ! ✏️</div>
+    <div>✂️ КИДАЙ СКЕТЧІ АБО ЗВУК СЮДИ! ✏️</div>
     <div style="font-size: 20px; font-family: var(--font-body); margin-top: 8px;">
       Підтримує PNG, JPG, WebP, MP3, WAV або файли .doodlecut
     </div>
   </div>
+
+  <div id="export-overlay">
+    <div class="export-card">
+      <div style="font-family: var(--font-doodle); font-size: 28px; font-weight:bold;">🎬 Рендеринг відео...</div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="export-progress"></div>
+      </div>
+      <div id="export-status-text" style="font-size: 15px;">Запис кадрів: 0%</div>
+      <button id="btn-cancel-export" class="coral" style="margin-top: 6px;">Скасувати</button>
+    </div>
+  </div>
+
+  <div id="toast">Повідомлення</div>
 
   <input type="file" id="inp-img" accept="image/*" multiple style="display:none">
   <input type="file" id="inp-snd" accept="audio/*" style="display:none">
@@ -366,36 +478,41 @@
   <!-- TOP BAR -->
   <header>
     <div class="logo">
-      DoodleCut ✂️ <span>No-Keyframes</span>
+      DoodleCut ✂️ <span>ExcaliMotion Edition</span>
     </div>
 
     <div class="header-btns">
       <button id="btn-undo" title="Ctrl+Z">↩ Відмінити</button>
       <button id="btn-redo" title="Ctrl+Shift+Z">↪ Повернути</button>
       <div style="width: 2px; height: 20px; background: var(--ink);"></div>
-      <button id="btn-upload-img">🖼 + Картинка</button>
+      <button id="btn-record-voice" class="record-btn">🎙 Запис голосу</button>
+      <button id="btn-upload-img">🖼 + Скетч</button>
       <button id="btn-upload-snd">🎵 + Звук</button>
+      <button id="btn-fit-audio" title="Підігнати довжину ролика під аудіо">⏱ Підігнати час</button>
       <div style="width: 2px; height: 20px; background: var(--ink);"></div>
       <button id="btn-save">💾 Зберегти</button>
       <button id="btn-load">📂 Відкрити</button>
-      <button id="btn-export" class="coral">🎬 Рендер у WebM</button>
+      <button id="btn-export" class="coral">🎬 Експорт WebM</button>
     </div>
   </header>
 
   <!-- WORKSPACE -->
   <main>
-    <!-- LEFT PANEL: CLIP LIST & SHORTCUTS -->
+    <!-- LEFT PANEL: STORYBOARD ROSTER -->
     <div class="panel panel-left">
-      <div class="panel-header">Кліпи на сцені</div>
+      <div class="panel-header">
+        <span>Скетчі (Розкадровка)</span>
+        <span id="clip-count" style="font-size:14px; font-weight:normal; color:#666;">0 шт</span>
+      </div>
       <div id="clip-tree" style="display:flex; flex-direction:column; gap:6px;"></div>
 
       <div style="margin-top:auto; font-size:13px; line-height: 1.4; border-top: 2px dashed var(--ink); padding-top: 8px;">
-        ⚡ <b>Швидкі фішки:</b><br>
-        • <b>Ctrl + V</b> — вставляє скріншот з буфера.<br>
-        • <b>Ctrl + D</b> — швидкий дублікат кліпу.<br>
-        • <b>S</b> — розрізати обраний кліп (Split).<br>
-        • <b>Space</b> — старт / пауза.<br>
-        • <b>Delete</b> — видалити кліп.
+        💡 <b>Скетч-лайфхаки:</b><br>
+        • <b>Ctrl + V</b> — вставляє з Excalidraw прямо на екран!<br>
+        • <b>🧲 Магніт</b> — тримає всі слайди встик без дірок.<br>
+        • <b>🎙 Запис голосу</b> — начитай текст одразу під час показу.<br>
+        • <b>S</b> — розрізати обраний кліп навпіл.<br>
+        • <b>Space</b> — старт / пауза.
       </div>
     </div>
 
@@ -440,7 +557,7 @@
             </div>
           </div>
 
-          <!-- ANIMATION PRESETS (No keyframes needed!) -->
+          <!-- ANIMATION & CAMERA EFFECTS -->
           <div class="prop-card" style="background:#fff9db;">
             <b>Анімація появи (In Preset):</b>
             <select id="ins-anim-in">
@@ -451,17 +568,32 @@
               <option value="fade">✨ Плавна поява (Fade)</option>
             </select>
 
-            <div style="margin-top:6px; display:flex; align-items:center; gap:8px;">
-              <input type="checkbox" id="ins-wiggle" style="width:18px; height:18px; cursor:pointer;">
-              <label for="ins-wiggle" style="cursor:pointer; font-weight:bold;">✏️ Живий малюнок (Wiggle)</label>
+            <b style="margin-top:6px;">🎥 Рух камери (Ken Burns):</b>
+            <select id="ins-camera">
+              <option value="none">Статично</option>
+              <option value="zoomIn">🔍 Плавний наїзд (+15% зум)</option>
+              <option value="zoomOut">🔎 Плавний від'їзд (-15% зум)</option>
+              <option value="panRight">➡️ Панорама вправо</option>
+              <option value="panLeft">⬅️ Панорама вліво</option>
+              <option value="panUp">⬆️ Панорама вгору</option>
+            </select>
+
+            <div style="margin-top:8px; display:flex; flex-direction:column; gap:4px;">
+              <label style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+                <input type="checkbox" id="ins-wiggle" style="width:16px; height:16px;">
+                <b>✏️ Живий скетч (Wiggle 8fps)</b>
+              </label>
+              <label style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+                <input type="checkbox" id="ins-marker-snd" style="width:16px; height:16px;">
+                <b>🔊 Звук маркера при старті</b>
+              </label>
             </div>
-            <div style="font-size:12px; color:#555;">Легке живе тремтіння, як у покадрових дудлах.</div>
           </div>
 
           <div class="prop-card">
             <div style="display:flex; gap:6px;">
-              <button id="btn-layer-up" style="flex:1;">🔼 Вище</button>
-              <button id="btn-layer-down" style="flex:1;">🔽 Нижче</button>
+              <button id="btn-layer-up" style="flex:1;">🔼 Вище / Раніше</button>
+              <button id="btn-layer-down" style="flex:1;">🔽 Нижче / Пізніше</button>
             </div>
           </div>
         </div>
@@ -475,7 +607,7 @@
       </div>
 
       <div id="no-clip-msg" style="color:#777; text-align:center; padding:30px 10px;">
-        Обери блок на таймлайні або клікни на малюнок на сцені.
+        Обери скетч на таймлайні або встав з Excalidraw через Ctrl+V.
       </div>
     </div>
   </main>
@@ -490,18 +622,19 @@
       </div>
 
       <div style="display:flex; align-items:center; gap:16px;">
+        <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:bold; background:#e8f5e9; padding:2px 8px; border:1.5px solid var(--ink); border-radius:12px;">
+          <input type="checkbox" id="chk-magnet" checked style="width:16px; height:16px;">
+          🧲 Магніт: Слайди встик
+        </label>
+
         <div style="display:flex; align-items:center; gap:6px; font-size:14px;">
           <label>🔍 Масштаб:</label>
-          <input type="range" id="timeline-zoom" min="50" max="300" value="120" style="width:90px;">
+          <input type="range" id="timeline-zoom" min="50" max="250" value="110" style="width:80px;">
         </div>
+
         <div style="display:flex; align-items:center; gap:6px; font-size:14px;">
           <label>Загальний час:</label>
-          <select id="sel-duration">
-            <option value="5">5 сек</option>
-            <option value="10" selected>10 сек</option>
-            <option value="20">20 сек</option>
-            <option value="30">30 сек</option>
-          </select>
+          <input type="number" id="inp-total-duration" min="2" max="300" step="1" value="10" style="width:65px;"> сек
         </div>
       </div>
     </div>
@@ -520,7 +653,7 @@
 
   <script>
     /* ==========================================================================
-       DOODLECUT ENGINE — CAPCUT-LIKE CLIP INTERACTION WITH ZERO KEYFRAMES
+       DOODLECUT ENGINE — EXCALIDRAW SLIDESHOW & SOUND ANIMATOR
        ========================================================================== */
 
     const LOGICAL_W = 1280;
@@ -530,27 +663,94 @@
       totalDuration: 10,
       currentTime: 0,
       isPlaying: false,
-      zoom: 120, // pixels per second
+      zoom: 110, // px per sec
+      magnetMode: true,
       selectedId: null,
-      clips: [], // visual clips: { id, name, type:'image', img, dataUrl, x, y, scale, rotation, opacity, startTime, duration, animIn, wiggle }
-      audioClips: [], // audio clips: { id, name, type:'audio', buffer, dataUrl, startTime, duration, volume }
+      clips: [],       // visual: { id, name, type:'image', img, dataUrl, x, y, width, height, scale, rotation, opacity, startTime, duration, animIn, camera, wiggle, markerSound }
+      audioClips: [],  // audio: { id, name, type:'audio', buffer, dataUrl, startTime, duration, volume }
       history: [],
       future: []
     };
 
     const canvas = document.getElementById('stage');
     const ctx = canvas.getContext('2d');
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let audioCtx = null;
     let audioSources = [];
 
-    // Canvas Interaction
-    let canvasDrag = null; // { mode: 'move'|'scale'|'rot', clip, startX, startY, initX, initY, initScale, initRot }
+    // Voice recorder state
+    let isRecordingVoice = false;
+    let mediaRecorderMic = null;
+    let micChunks = [];
+    let micRecordStart = 0;
+
+    // Toast utility
+    function showToast(text) {
+      const t = document.getElementById('toast');
+      t.textContent = text;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    function ensureAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    // Procedural Synthesizer for chalk/marker scribble
+    function playMarkerScribble() {
+      ensureAudioContext();
+      if (!audioCtx) return;
+      const dur = 0.20;
+      const sr = audioCtx.sampleRate;
+      const buf = audioCtx.createBuffer(1, Math.floor(sr * dur), sr);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        const env = Math.exp(-i / (sr * 0.05));
+        data[i] = (Math.random() * 2 - 1) * env * (0.8 + 0.2 * Math.sin(i * 0.06));
+      }
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 1800;
+      filter.Q.value = 3.0;
+
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+
+      src.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+      src.start();
+    }
+
+    // --- Magnet Ribbon (Ripple Editing Engine) ---
+    function recalcMagnetTimes() {
+      if (!state.magnetMode) return;
+      let curr = 0;
+      state.clips.forEach(clip => {
+        clip.startTime = +curr.toFixed(2);
+        curr += clip.duration;
+      });
+
+      // Expand total duration if slides exceed it
+      if (curr > state.totalDuration) {
+        state.totalDuration = Math.ceil(curr);
+        document.getElementById('inp-total-duration').value = state.totalDuration;
+      }
+    }
 
     // --- History Stack ---
     function saveHistory() {
       const snap = {
         totalDuration: state.totalDuration,
         selectedId: state.selectedId,
+        magnetMode: state.magnetMode,
         clips: state.clips.map(c => ({ ...c, img: undefined })),
         audioClips: state.audioClips.map(a => ({ ...a, buffer: undefined }))
       };
@@ -564,11 +764,13 @@
       const currentSnap = JSON.stringify({
         totalDuration: state.totalDuration,
         selectedId: state.selectedId,
+        magnetMode: state.magnetMode,
         clips: state.clips.map(c => ({ ...c, img: undefined })),
         audioClips: state.audioClips.map(a => ({ ...a, buffer: undefined }))
       });
       state.future.push(currentSnap);
       applySnapshot(state.history.pop());
+      showToast('↩ Дія відмінена');
     }
 
     function redo() {
@@ -576,18 +778,22 @@
       const currentSnap = JSON.stringify({
         totalDuration: state.totalDuration,
         selectedId: state.selectedId,
+        magnetMode: state.magnetMode,
         clips: state.clips.map(c => ({ ...c, img: undefined })),
         audioClips: state.audioClips.map(a => ({ ...a, buffer: undefined }))
       });
       state.history.push(currentSnap);
       applySnapshot(state.future.pop());
+      showToast('↪ Дія повернена');
     }
 
     function applySnapshot(jsonStr) {
       const data = JSON.parse(jsonStr);
       state.totalDuration = data.totalDuration;
-      document.getElementById('sel-duration').value = state.totalDuration;
+      document.getElementById('inp-total-duration').value = state.totalDuration;
       state.selectedId = data.selectedId;
+      state.magnetMode = !!data.magnetMode;
+      document.getElementById('chk-magnet').checked = state.magnetMode;
 
       state.clips = data.clips.map(c => {
         const img = new Image();
@@ -599,6 +805,7 @@
       data.audioClips.forEach(async a => {
         const res = await fetch(a.dataUrl);
         const buf = await res.arrayBuffer();
+        ensureAudioContext();
         const decoded = await audioCtx.decodeAudioData(buf);
         state.audioClips.push({ ...a, buffer: decoded });
         renderTimeline();
@@ -615,7 +822,7 @@
 
     function playAudio(fromTime) {
       stopAudio();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      ensureAudioContext();
 
       state.audioClips.forEach(clip => {
         if (!clip.buffer) return;
@@ -640,7 +847,10 @@
 
     // --- Playback Loop ---
     let lastTime = 0;
+    let lastMarkerTriggered = -1;
+
     function play() {
+      ensureAudioContext();
       if (state.currentTime >= state.totalDuration) state.currentTime = 0;
       state.isPlaying = true;
       document.getElementById('btn-play').textContent = '⏸ PAUSE';
@@ -672,6 +882,14 @@
       lastTime = now;
       state.currentTime += dt;
 
+      // Marker sound trigger check on slide boundary
+      state.clips.forEach((c, idx) => {
+        if (c.markerSound && state.currentTime >= c.startTime && state.currentTime < (c.startTime + 0.1) && lastMarkerTriggered !== idx) {
+          lastMarkerTriggered = idx;
+          playMarkerScribble();
+        }
+      });
+
       if (state.currentTime >= state.totalDuration) {
         state.currentTime = state.totalDuration;
         pause();
@@ -681,11 +899,11 @@
       if (state.isPlaying) requestAnimationFrame(loop);
     }
 
-    // --- Canvas Rendering with Presets & Wiggle ---
+    // --- Canvas Rendering (Presets, Ken Burns Camera & Squigglevision) ---
     function renderCanvas() {
       ctx.clearRect(0, 0, LOGICAL_W, LOGICAL_H);
 
-      // White Sketchy Background
+      // Clean Excalidraw-like white canvas
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
 
@@ -693,7 +911,6 @@
 
       // Draw all active visual clips
       state.clips.forEach(clip => {
-        // Is clip alive right now?
         if (t < clip.startTime || t >= (clip.startTime + clip.duration)) {
           return;
         }
@@ -706,15 +923,29 @@
         let rot = clip.rotation;
         let opacity = clip.opacity;
 
-        // 1. In-Animation Calculations
+        const clipProgress = Math.max(0, Math.min(1, (t - clip.startTime) / clip.duration));
+
+        // 1. Ken Burns Camera Preset
+        if (clip.camera === 'zoomIn') {
+          scale *= (1 + 0.16 * clipProgress);
+        } else if (clip.camera === 'zoomOut') {
+          scale *= (1.16 - 0.16 * clipProgress);
+        } else if (clip.camera === 'panRight') {
+          posX -= (clip.width * scale * 0.12) * clipProgress;
+        } else if (clip.camera === 'panLeft') {
+          posX += (clip.width * scale * 0.12) * clipProgress;
+        } else if (clip.camera === 'panUp') {
+          posY -= (clip.height * scale * 0.12) * clipProgress;
+        }
+
+        // 2. In-Animation Calculations
         const inProgress = (t - clip.startTime);
         const animDuration = Math.min(0.28, clip.duration / 2);
 
         if (inProgress < animDuration && clip.animIn !== 'none') {
           const p = inProgress / animDuration;
           if (clip.animIn === 'pop') {
-            // Overshoot bounce pop
-            const bounce = Math.sin(p * Math.PI) * 0.3;
+            const bounce = Math.sin(p * Math.PI) * 0.28;
             scale = scale * (p + bounce);
           } else if (clip.animIn === 'slideUp') {
             posY += (1 - p) * 160;
@@ -727,13 +958,12 @@
           }
         }
 
-        // 2. Hand-Drawn Wiggle Effect (Squigglevision!)
+        // 3. Authentic 8fps Doodle Wiggle (Squigglevision)
         if (clip.wiggle) {
-          // Generates 8fps discrete jitter
           const wiggleStep = Math.floor(t * 8);
-          const jitterRot = (Math.sin(wiggleStep * 9.2) * 1.8);
-          const jitterX = (Math.cos(wiggleStep * 5.4) * 2.5);
-          const jitterY = (Math.sin(wiggleStep * 7.1) * 2.5);
+          const jitterRot = Math.sin(wiggleStep * 9.2) * 1.5;
+          const jitterX = Math.cos(wiggleStep * 5.4) * 2.2;
+          const jitterY = Math.sin(wiggleStep * 7.1) * 2.2;
           rot += jitterRot;
           posX += jitterX;
           posY += jitterY;
@@ -750,7 +980,7 @@
 
         ctx.restore();
 
-        // 3. Selection Box if Selected & Active
+        // 4. Selection Box if Selected & Active
         if (clip.id === state.selectedId) {
           drawSelectionHandles(clip, posX, posY, scale, rot);
         }
@@ -765,7 +995,7 @@
       ctx.translate(x, y);
       ctx.rotate((rot * Math.PI) / 180);
 
-      // Sketchy dashed border
+      // Dashed border
       ctx.strokeStyle = '#1a1816';
       ctx.lineWidth = 2;
       ctx.setLineDash([6, 4]);
@@ -809,7 +1039,8 @@
       ctx.restore();
     }
 
-    // --- Canvas Mouse Transforms ---
+    // --- Canvas Interactive Mouse Transforms ---
+    let canvasDrag = null;
     function getCanvasCoords(e) {
       const r = canvas.getBoundingClientRect();
       return {
@@ -822,7 +1053,7 @@
       const pt = getCanvasCoords(e);
       const t = state.currentTime;
 
-      // Check selected clip handles first
+      // 1. Check selected clip handles
       const selected = state.clips.find(c => c.id === state.selectedId);
       if (selected && t >= selected.startTime && t < (selected.startTime + selected.duration)) {
         const dx = pt.x - selected.x;
@@ -833,7 +1064,6 @@
         const halfW = (selected.width * selected.scale) / 2;
         const halfH = (selected.height * selected.scale) / 2;
 
-        // Rotation Handle hit
         if (Math.hypot(lx - 0, ly - (-halfH - 24)) < 16) {
           saveHistory();
           canvasDrag = {
@@ -844,7 +1074,6 @@
           return;
         }
 
-        // Corner Resize Hit
         if (Math.hypot(Math.abs(lx) - halfW, Math.abs(ly) - halfH) < 16) {
           saveHistory();
           canvasDrag = {
@@ -856,7 +1085,7 @@
         }
       }
 
-      // Check click on active clips (topmost first)
+      // 2. Check hit on active visual clips
       for (let i = state.clips.length - 1; i >= 0; i--) {
         const c = state.clips[i];
         if (t < c.startTime || t >= (c.startTime + c.duration)) continue;
@@ -912,7 +1141,7 @@
       }
     });
 
-    // --- Timeline Rendering & Drag/Trim System ---
+    // --- Timeline Rendering with Magnet/Ripple Edit ---
     function renderTimeline() {
       const tracksEl = document.getElementById('timeline-tracks');
       const ruler = document.getElementById('ruler');
@@ -921,7 +1150,7 @@
       const totalWidth = state.totalDuration * state.zoom + 80;
       tracksEl.style.minWidth = totalWidth + 'px';
 
-      // 1. Draw Ruler with 0.5s and 1s ticks
+      // 1. Draw Ruler
       ruler.innerHTML = '';
       for (let sec = 0; sec <= state.totalDuration; sec += 0.5) {
         const tick = document.createElement('div');
@@ -940,54 +1169,49 @@
       // 2. Draw Lanes & Clip Blocks
       lanesBox.innerHTML = '';
 
-      // Combine visual & audio into lanes
-      const allClips = [
-        ...state.clips.map(c => ({ ...c, isAudio: false })),
-        ...state.audioClips.map(a => ({ ...a, isAudio: true }))
-      ];
+      const visualLane = document.createElement('div');
+      visualLane.className = 'track-lane';
+      visualLane.style.background = '#faf8f2';
 
-      allClips.forEach(clip => {
-        const lane = document.createElement('div');
-        lane.className = 'track-lane';
-
+      state.clips.forEach((clip, index) => {
         const block = document.createElement('div');
-        block.className = `clip-block ${clip.isAudio ? 'audio' : ''} ${clip.id === state.selectedId ? 'selected' : ''}`;
+        block.className = `clip-block ${clip.id === state.selectedId ? 'selected' : ''}`;
         block.style.left = (clip.startTime * state.zoom) + 'px';
         block.style.width = Math.max(16, clip.duration * state.zoom) + 'px';
         block.innerHTML = `
-          <div class="trim-handle trim-left">◀</div>
-          <span style="pointer-events:none; margin: 0 10px;">${clip.isAudio ? '🎵' : '🖼'} ${clip.name} (${clip.duration.toFixed(2)}s)</span>
+          ${!state.magnetMode ? '<div class="trim-handle trim-left">◀</div>' : ''}
+          <span style="pointer-events:none; margin: 0 8px;">#${index+1} 🖼 ${clip.name} (${clip.duration.toFixed(1)}s)</span>
           <div class="trim-handle trim-right">▶</div>
         `;
 
-        // Select on click
         block.onmousedown = (e) => {
           e.stopPropagation();
           state.selectedId = clip.id;
           syncAllUI();
 
-          // Check if clicked on trim handle
           const isLeftTrim = e.target.classList.contains('trim-left');
           const isRightTrim = e.target.classList.contains('trim-right');
 
           saveHistory();
           const startMouseX = e.clientX;
-          const origStart = clip.startTime;
           const origDur = clip.duration;
+          const origStart = clip.startTime;
 
           const onMouseMove = (ev) => {
             const deltaSec = (ev.clientX - startMouseX) / state.zoom;
 
-            if (isLeftTrim) {
-              const newStart = Math.max(0, Math.min(origStart + origDur - 0.05, origStart + deltaSec));
-              const newDur = (origStart + origDur) - newStart;
+            if (isRightTrim) {
+              const newDur = Math.max(0.2, origDur + deltaSec);
+              clip.duration = +newDur.toFixed(2);
+              if (state.magnetMode) {
+                recalcMagnetTimes();
+              }
+            } else if (isLeftTrim && !state.magnetMode) {
+              const newStart = Math.max(0, Math.min(origStart + origDur - 0.2, origStart + deltaSec));
+              clip.duration = +(origStart + origDur - newStart).toFixed(2);
               clip.startTime = +newStart.toFixed(2);
-              clip.duration = +newDur.toFixed(2);
-            } else if (isRightTrim) {
-              const newDur = Math.max(0.05, Math.min(state.totalDuration - origStart, origDur + deltaSec));
-              clip.duration = +newDur.toFixed(2);
-            } else {
-              // Drag entire clip block along timeline
+            } else if (!state.magnetMode) {
+              // Free drag along timeline
               const newStart = Math.max(0, Math.min(state.totalDuration - origDur, origStart + deltaSec));
               clip.startTime = +newStart.toFixed(2);
             }
@@ -1002,6 +1226,60 @@
             window.removeEventListener('mouseup', onMouseUp);
           };
 
+          window.addEventListener('mousemove', onMouseMove);
+          window.addEventListener('mouseup', onMouseUp);
+        };
+
+        visualLane.appendChild(block);
+      });
+      lanesBox.appendChild(visualLane);
+
+      // Audio Lanes
+      state.audioClips.forEach(clip => {
+        const lane = document.createElement('div');
+        lane.className = 'track-lane';
+
+        const block = document.createElement('div');
+        block.className = `clip-block audio ${clip.id === state.selectedId ? 'selected' : ''}`;
+        block.style.left = (clip.startTime * state.zoom) + 'px';
+        block.style.width = Math.max(16, clip.duration * state.zoom) + 'px';
+        block.innerHTML = `
+          <div class="trim-handle trim-left">◀</div>
+          <span style="pointer-events:none; margin: 0 8px;">🎵 ${clip.name} (${clip.duration.toFixed(1)}s)</span>
+          <div class="trim-handle trim-right">▶</div>
+        `;
+
+        block.onmousedown = (e) => {
+          e.stopPropagation();
+          state.selectedId = clip.id;
+          syncAllUI();
+
+          const isLeftTrim = e.target.classList.contains('trim-left');
+          const isRightTrim = e.target.classList.contains('trim-right');
+          saveHistory();
+          const startMouseX = e.clientX;
+          const origStart = clip.startTime;
+          const origDur = clip.duration;
+
+          const onMouseMove = (ev) => {
+            const deltaSec = (ev.clientX - startMouseX) / state.zoom;
+            if (isRightTrim) {
+              clip.duration = +Math.max(0.2, origDur + deltaSec).toFixed(2);
+            } else if (isLeftTrim) {
+              const newStart = Math.max(0, Math.min(origStart + origDur - 0.2, origStart + deltaSec));
+              clip.duration = +(origStart + origDur - newStart).toFixed(2);
+              clip.startTime = +newStart.toFixed(2);
+            } else {
+              clip.startTime = +Math.max(0, origStart + deltaSec).toFixed(2);
+            }
+            renderTimeline();
+            syncInspector();
+          };
+
+          const onMouseUp = () => {
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+          };
           window.addEventListener('mousemove', onMouseMove);
           window.addEventListener('mouseup', onMouseUp);
         };
@@ -1024,14 +1302,13 @@
         `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(cs).padStart(2,'0')}`;
     }
 
-    // Ruler click seeking
     document.getElementById('ruler').onclick = (e) => {
       const r = e.currentTarget.getBoundingClientRect();
       const clickX = e.clientX - r.left;
       seek(clickX / state.zoom);
     };
 
-    // --- Inspector Panel & Clip Tree Sync ---
+    // --- Storyboard Left Panel & Inspector ---
     function syncInspector() {
       const inspector = document.getElementById('inspector');
       const emptyMsg = document.getElementById('no-clip-msg');
@@ -1053,13 +1330,18 @@
       document.getElementById('ins-start').value = clip.startTime;
       document.getElementById('ins-duration').value = clip.duration;
 
+      // In magnet mode start time is driven by ripple
+      document.getElementById('ins-start').disabled = (state.magnetMode && clip.type === 'image');
+
       if (clip.type === 'image') {
         visControls.style.display = 'flex';
         document.getElementById('ins-scale').value = clip.scale;
         document.getElementById('ins-rot').value = clip.rotation;
         document.getElementById('ins-opacity').value = clip.opacity;
         document.getElementById('ins-anim-in').value = clip.animIn || 'none';
+        document.getElementById('ins-camera').value = clip.camera || 'none';
         document.getElementById('ins-wiggle').checked = !!clip.wiggle;
+        document.getElementById('ins-marker-snd').checked = !!clip.markerSound;
       } else {
         visControls.style.display = 'none';
       }
@@ -1067,28 +1349,41 @@
 
     function syncClipTree() {
       const tree = document.getElementById('clip-tree');
+      document.getElementById('clip-count').textContent = state.clips.length + ' скетчів';
       tree.innerHTML = '';
 
-      state.clips.forEach(c => {
-        const item = document.createElement('button');
-        item.style.textAlign = 'left';
-        item.style.padding = '4px 8px';
-        if (c.id === state.selectedId) item.classList.add('primary');
-        item.textContent = `🖼 ${c.name} (${c.duration}s)`;
+      state.clips.forEach((c, idx) => {
+        const item = document.createElement('div');
+        item.className = `story-item ${c.id === state.selectedId ? 'active' : ''}`;
+
+        const thumb = document.createElement('img');
+        thumb.className = 'story-thumb';
+        thumb.src = c.dataUrl;
+
+        const label = document.createElement('span');
+        label.style.flex = '1';
+        label.style.overflow = 'hidden';
+        label.style.textOverflow = 'ellipsis';
+        label.style.whiteSpace = 'nowrap';
+        label.textContent = `${idx + 1}. ${c.name} (${c.duration}s)`;
+
+        item.appendChild(thumb);
+        item.appendChild(label);
+
         item.onclick = () => {
           state.selectedId = c.id;
           seek(c.startTime);
           syncAllUI();
         };
+
         tree.appendChild(item);
       });
 
-      state.audioClips.forEach(a => {
-        const item = document.createElement('button');
-        item.style.textAlign = 'left';
-        item.style.padding = '4px 8px';
-        if (a.id === state.selectedId) item.classList.add('mint');
-        item.textContent = `🎵 ${a.name} (${a.duration}s)`;
+      state.audioClips.forEach((a, idx) => {
+        const item = document.createElement('div');
+        item.className = `story-item ${a.id === state.selectedId ? 'active' : ''}`;
+        item.style.borderColor = '#2ecc71';
+        item.innerHTML = `<span style="flex:1;">🎵 ${a.name} (${a.duration}s)</span>`;
         item.onclick = () => {
           state.selectedId = a.id;
           seek(a.startTime);
@@ -1108,11 +1403,20 @@
     // Inspector Live Listeners
     document.getElementById('ins-start').oninput = e => {
       const c = getSelectedClip();
-      if (c) { c.startTime = Math.max(0, parseFloat(e.target.value) || 0); renderTimeline(); renderCanvas(); }
+      if (c && (!state.magnetMode || c.type === 'audio')) {
+        c.startTime = Math.max(0, parseFloat(e.target.value) || 0);
+        renderTimeline();
+        renderCanvas();
+      }
     };
     document.getElementById('ins-duration').oninput = e => {
       const c = getSelectedClip();
-      if (c) { c.duration = Math.max(0.05, parseFloat(e.target.value) || 0.1); renderTimeline(); renderCanvas(); }
+      if (c) {
+        c.duration = Math.max(0.1, parseFloat(e.target.value) || 0.1);
+        if (state.magnetMode) recalcMagnetTimes();
+        renderTimeline();
+        renderCanvas();
+      }
     };
     document.getElementById('ins-scale').oninput = e => {
       const c = getSelectedClip();
@@ -1130,9 +1434,17 @@
       const c = getSelectedClip();
       if (c) { c.animIn = e.target.value; renderCanvas(); }
     };
+    document.getElementById('ins-camera').onchange = e => {
+      const c = getSelectedClip();
+      if (c) { c.camera = e.target.value; renderCanvas(); }
+    };
     document.getElementById('ins-wiggle').onchange = e => {
       const c = getSelectedClip();
       if (c) { c.wiggle = e.target.checked; renderCanvas(); }
+    };
+    document.getElementById('ins-marker-snd').onchange = e => {
+      const c = getSelectedClip();
+      if (c) { c.markerSound = e.target.checked; }
     };
 
     function getSelectedClip() {
@@ -1149,15 +1461,15 @@
       if (c.type === 'image') {
         const clonedImg = new Image();
         clonedImg.src = c.dataUrl;
-
         const cloned = {
           ...c,
           id: 'clip_' + Date.now() + Math.random().toString(36).substr(2, 4),
           name: c.name + ' (Копія)',
-          startTime: +(c.startTime + c.duration).toFixed(2), // place right after original!
           img: clonedImg
         };
-        state.clips.push(cloned);
+        const idx = state.clips.findIndex(x => x.id === c.id);
+        state.clips.splice(idx + 1, 0, cloned);
+        if (state.magnetMode) recalcMagnetTimes();
         state.selectedId = cloned.id;
       } else {
         const cloned = {
@@ -1170,6 +1482,7 @@
         state.selectedId = cloned.id;
       }
       syncAllUI();
+      showToast('📋 Скетч дубльовано');
     }
 
     function splitSelected() {
@@ -1177,9 +1490,8 @@
       if (!c) return;
       const t = state.currentTime;
 
-      // Ensure playhead is inside clip bounds with at least 0.05s margin
-      if (t <= c.startTime + 0.05 || t >= (c.startTime + c.duration - 0.05)) {
-        alert('Пересунь Playhead усередину кліпу, щоб розрізати його!');
+      if (t <= c.startTime + 0.1 || t >= (c.startTime + c.duration - 0.1)) {
+        alert('Пересунь Playhead усередину обраного кліпу, щоб розрізати його!');
         return;
       }
 
@@ -1195,18 +1507,20 @@
         const part2 = {
           ...c,
           id: 'clip_' + Date.now(),
-          name: c.name + ' part 2',
+          name: c.name + ' (частина 2)',
           startTime: t,
           duration: secondPartDuration,
           img: img2
         };
-        state.clips.push(part2);
+        const idx = state.clips.findIndex(x => x.id === c.id);
+        state.clips.splice(idx + 1, 0, part2);
+        if (state.magnetMode) recalcMagnetTimes();
         state.selectedId = part2.id;
       } else {
         const part2 = {
           ...c,
           id: 'aud_' + Date.now(),
-          name: c.name + ' part 2',
+          name: c.name + ' (частина 2)',
           startTime: t,
           duration: secondPartDuration
         };
@@ -1215,6 +1529,7 @@
       }
 
       syncAllUI();
+      showToast('✂️ Кліп розрізано');
     }
 
     function deleteSelected() {
@@ -1223,28 +1538,32 @@
       state.clips = state.clips.filter(c => c.id !== state.selectedId);
       state.audioClips = state.audioClips.filter(a => a.id !== state.selectedId);
       state.selectedId = null;
+      if (state.magnetMode) recalcMagnetTimes();
       syncAllUI();
+      showToast('🗑 Видалено');
     }
 
-    // Layer Up / Down
+    // Layer / Storyboard Reorder
     document.getElementById('btn-layer-up').onclick = () => {
-      const idx = state.clips.findIndex(c => c.id === state.selectedId);
-      if (idx >= 0 && idx < state.clips.length - 1) {
-        saveHistory();
-        const tmp = state.clips[idx];
-        state.clips[idx] = state.clips[idx + 1];
-        state.clips[idx + 1] = tmp;
-        syncAllUI();
-      }
-    };
-
-    document.getElementById('btn-layer-down').onclick = () => {
       const idx = state.clips.findIndex(c => c.id === state.selectedId);
       if (idx > 0) {
         saveHistory();
         const tmp = state.clips[idx];
         state.clips[idx] = state.clips[idx - 1];
         state.clips[idx - 1] = tmp;
+        if (state.magnetMode) recalcMagnetTimes();
+        syncAllUI();
+      }
+    };
+
+    document.getElementById('btn-layer-down').onclick = () => {
+      const idx = state.clips.findIndex(c => c.id === state.selectedId);
+      if (idx >= 0 && idx < state.clips.length - 1) {
+        saveHistory();
+        const tmp = state.clips[idx];
+        state.clips[idx] = state.clips[idx + 1];
+        state.clips[idx + 1] = tmp;
+        if (state.magnetMode) recalcMagnetTimes();
         syncAllUI();
       }
     };
@@ -1253,23 +1572,29 @@
     document.getElementById('btn-split').onclick = splitSelected;
     document.getElementById('btn-delete').onclick = deleteSelected;
 
-    // --- File Import (Drag & Drop + Clipboard Paste) ---
+    // --- Smart Excalidraw Import (Paste / Drop) ---
     function addImageClip(name, dataUrl) {
       const img = new Image();
       img.onload = () => {
         saveHistory();
 
+        // Calculate aspect ratio fitting neatly in 1280x720 canvas with margins
         let w = img.width;
         let h = img.height;
-        const maxDim = 360;
-        if (w > maxDim || h > maxDim) {
-          const r = Math.min(maxDim / w, maxDim / h);
-          w *= r; h *= r;
+        const targetH = 560;
+        const targetW = 960;
+        const r = Math.min(targetW / w, targetH / h, 1);
+        w *= r; h *= r;
+
+        let start = state.currentTime;
+        if (state.magnetMode && state.clips.length > 0) {
+          const last = state.clips[state.clips.length - 1];
+          start = +(last.startTime + last.duration).toFixed(2);
         }
 
         const newClip = {
           id: 'clip_' + Date.now() + Math.random().toString(36).substr(2, 4),
-          name: name || 'Doodle',
+          name: name || ('Скетч ' + (state.clips.length + 1)),
           type: 'image',
           img: img,
           dataUrl: dataUrl,
@@ -1280,20 +1605,26 @@
           scale: 1,
           rotation: 0,
           opacity: 1,
-          startTime: state.currentTime,
-          duration: 2.0, // default 2 sec (can be trimmed down to 0.05s)
-          animIn: 'pop', // default fun bounce
-          wiggle: false
+          startTime: start,
+          duration: 2.5,
+          animIn: 'pop',
+          camera: 'zoomIn',
+          wiggle: true,
+          markerSound: true
         };
 
         state.clips.push(newClip);
+        if (state.magnetMode) recalcMagnetTimes();
         state.selectedId = newClip.id;
+        seek(newClip.startTime);
         syncAllUI();
+        showToast('📋 Скетч додано!');
       };
       img.src = dataUrl;
     }
 
     async function addAudioClip(name, file) {
+      ensureAudioContext();
       const buf = await file.arrayBuffer();
       const decoded = await audioCtx.decodeAudioData(buf);
 
@@ -1311,11 +1642,12 @@
           volume: 1
         });
         syncAllUI();
+        showToast('🎵 Звук додано');
       };
       reader.readAsDataURL(file);
     }
 
-    // Ctrl+V Paste Support (Direct from Excalidraw!)
+    // Ctrl+V Paste directly from Excalidraw clipboard
     window.addEventListener('paste', e => {
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -1323,14 +1655,14 @@
         if (item.type.startsWith('image/')) {
           const file = item.getAsFile();
           const reader = new FileReader();
-          reader.onload = ev => addImageClip('Pasted Excalidraw', ev.target.result);
+          reader.onload = ev => addImageClip('Excalidraw Скетч', ev.target.result);
           reader.readAsDataURL(file);
           break;
         }
       }
     });
 
-    // Drag and Drop Overlay
+    // Drag and Drop
     const dropScreen = document.getElementById('drop-screen');
     window.addEventListener('dragover', e => { e.preventDefault(); dropScreen.style.display = 'flex'; });
     window.addEventListener('dragleave', e => { if (!e.relatedTarget) dropScreen.style.display = 'none'; });
@@ -1350,7 +1682,6 @@
       });
     });
 
-    // Buttons file dialogs
     document.getElementById('btn-upload-img').onclick = () => document.getElementById('inp-img').click();
     document.getElementById('inp-img').onchange = e => {
       Array.from(e.target.files).forEach(f => {
@@ -1367,17 +1698,101 @@
       e.target.value = '';
     };
 
-    // --- Project Save / Load (.doodlecut file) ---
+    // --- Voiceover Microphone Recording ---
+    const btnRecord = document.getElementById('btn-record-voice');
+    btnRecord.onclick = async () => {
+      if (!isRecordingVoice) {
+        try {
+          ensureAudioContext();
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          micChunks = [];
+          mediaRecorderMic = new MediaRecorder(stream);
+          mediaRecorderMic.ondataavailable = e => { if (e.data.size > 0) micChunks.push(e.data); };
+          mediaRecorderMic.onstop = async () => {
+            stream.getTracks().forEach(t => t.stop());
+            const blob = new Blob(micChunks, { type: 'audio/webm' });
+            const ab = await blob.arrayBuffer();
+            const decoded = await audioCtx.decodeAudioData(ab);
+
+            const reader = new FileReader();
+            reader.onload = ev => {
+              saveHistory();
+              const recAud = {
+                id: 'aud_voice_' + Date.now(),
+                name: '🎙 Голос ' + (state.audioClips.length + 1),
+                type: 'audio',
+                dataUrl: ev.target.result,
+                buffer: decoded,
+                startTime: micRecordStart,
+                duration: +decoded.duration.toFixed(2),
+                volume: 1
+              };
+              state.audioClips.push(recAud);
+              if (micRecordStart + decoded.duration > state.totalDuration) {
+                state.totalDuration = Math.ceil(micRecordStart + decoded.duration + 0.5);
+                document.getElementById('inp-total-duration').value = state.totalDuration;
+              }
+              syncAllUI();
+              showToast('🎙 Запис голосу додано!');
+            };
+            reader.readAsDataURL(blob);
+          };
+
+          micRecordStart = state.currentTime;
+          mediaRecorderMic.start();
+          isRecordingVoice = true;
+          btnRecord.textContent = '⏹ Зупинити запис';
+          btnRecord.classList.add('recording');
+          play();
+        } catch(err) {
+          alert('Доступ до мікрофона відхилено або недоступний: ' + err.message);
+        }
+      } else {
+        isRecordingVoice = false;
+        btnRecord.textContent = '🎙 Запис голосу';
+        btnRecord.classList.remove('recording');
+        if (mediaRecorderMic && mediaRecorderMic.state !== 'inactive') {
+          mediaRecorderMic.stop();
+        }
+        pause();
+      }
+    };
+
+    // --- Auto-Fit Total Duration to Audio / Slides ---
+    document.getElementById('btn-fit-audio').onclick = () => {
+      let maxEnd = 0;
+      state.clips.forEach(c => maxEnd = Math.max(maxEnd, c.startTime + c.duration));
+      state.audioClips.forEach(a => maxEnd = Math.max(maxEnd, a.startTime + a.duration));
+      if (maxEnd > 0) {
+        saveHistory();
+        state.totalDuration = Math.ceil(maxEnd);
+        document.getElementById('inp-total-duration').value = state.totalDuration;
+        renderTimeline();
+        showToast(`⏱ Тривалість адаптовано: ${state.totalDuration}с`);
+      }
+    };
+
+    // --- Magnet Toggle ---
+    document.getElementById('chk-magnet').onchange = e => {
+      saveHistory();
+      state.magnetMode = e.target.checked;
+      if (state.magnetMode) recalcMagnetTimes();
+      syncAllUI();
+      showToast(state.magnetMode ? '🧲 Режим слайдшоу активовано' : '🔓 Вільний монтаж');
+    };
+
+    // --- Save / Load Project (.doodlecut) ---
     document.getElementById('btn-save').onclick = () => {
       const bundle = {
         app: "DoodleCut",
         totalDuration: state.totalDuration,
+        magnetMode: state.magnetMode,
         clips: state.clips.map(c => ({
           id: c.id, name: c.name, type: c.type, dataUrl: c.dataUrl,
           x: c.x, y: c.y, width: c.width, height: c.height,
           scale: c.scale, rotation: c.rotation, opacity: c.opacity,
           startTime: c.startTime, duration: c.duration,
-          animIn: c.animIn, wiggle: c.wiggle
+          animIn: c.animIn, camera: c.camera, wiggle: c.wiggle, markerSound: c.markerSound
         })),
         audioClips: state.audioClips.map(a => ({
           id: a.id, name: a.name, type: a.type, dataUrl: a.dataUrl,
@@ -1389,9 +1804,10 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `doodlecut-${Date.now()}.doodlecut`;
+      a.download = `doodle-project-${Date.now()}.doodlecut`;
       a.click();
       URL.revokeObjectURL(url);
+      showToast('💾 Проект збережено');
     };
 
     document.getElementById('btn-load').onclick = () => document.getElementById('inp-project').click();
@@ -1407,7 +1823,9 @@
           const data = JSON.parse(e.target.result);
           saveHistory();
           state.totalDuration = data.totalDuration || 10;
-          document.getElementById('sel-duration').value = state.totalDuration;
+          state.magnetMode = data.magnetMode !== undefined ? data.magnetMode : true;
+          document.getElementById('chk-magnet').checked = state.magnetMode;
+          document.getElementById('inp-total-duration').value = state.totalDuration;
 
           state.clips = (data.clips || []).map(c => {
             const img = new Image();
@@ -1419,6 +1837,7 @@
           for (const a of (data.audioClips || [])) {
             const res = await fetch(a.dataUrl);
             const buf = await res.arrayBuffer();
+            ensureAudioContext();
             const decoded = await audioCtx.decodeAudioData(buf);
             state.audioClips.push({ ...a, buffer: decoded });
           }
@@ -1426,21 +1845,28 @@
           state.selectedId = null;
           seek(0);
           syncAllUI();
+          showToast('📂 Проект успішно відкрито');
         } catch(err) {
-          alert('Невірний формат файлу проекту!');
+          alert('Невірний формат файлу!');
         }
       };
       reader.readAsText(file);
     }
 
-    // --- WebM Video Rendering ---
-    document.getElementById('btn-export').onclick = async () => {
-      const btn = document.getElementById('btn-export');
-      btn.disabled = true;
-      btn.textContent = '⏳ Запис WebM...';
+    // --- WebM Export with Percentage Progress Modal ---
+    let exportRecorder = null;
+    let exportInterval = null;
 
+    document.getElementById('btn-export').onclick = async () => {
+      ensureAudioContext();
       seek(0);
       pause();
+
+      const overlay = document.getElementById('export-overlay');
+      const progFill = document.getElementById('export-progress');
+      const statusText = document.getElementById('export-status-text');
+      overlay.style.display = 'flex';
+      progFill.style.width = '0%';
 
       const stream = canvas.captureStream(30);
       const dest = audioCtx.createMediaStreamDestination();
@@ -1457,37 +1883,57 @@
         stream.addTrack(dest.stream.getAudioTracks()[0]);
       }
 
-      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      exportRecorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm;codecs=vp8,opus',
+        videoBitsPerSecond: 4500000
+      });
+
       const chunks = [];
+      exportRecorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+      exportRecorder.onstop = () => {
+        clearInterval(exportInterval);
+        overlay.style.display = 'none';
 
-      recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `doodle-animation-${Date.now()}.webm`;
-        a.click();
-        URL.revokeObjectURL(url);
-
-        btn.disabled = false;
-        btn.textContent = '🎬 Рендер у WebM';
+        if (chunks.length > 0) {
+          const blob = new Blob(chunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `doodle-story-${Date.now()}.webm`;
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast('🎬 Відео експортовано!');
+        }
         seek(0);
       };
 
-      recorder.start();
+      exportRecorder.start();
       play();
 
-      const timer = setInterval(() => {
+      exportInterval = setInterval(() => {
+        const percent = Math.min(100, Math.floor((state.currentTime / state.totalDuration) * 100));
+        progFill.style.width = percent + '%';
+        statusText.textContent = `Запис кадрів: ${percent}% (${state.currentTime.toFixed(1)}с / ${state.totalDuration}с)`;
+
         if (!state.isPlaying || state.currentTime >= state.totalDuration) {
-          clearInterval(timer);
-          recorder.stop();
+          clearInterval(exportInterval);
+          exportRecorder.stop();
           pause();
         }
       }, 100);
     };
 
-    // --- UI Listeners & Hotkeys ---
+    document.getElementById('btn-cancel-export').onclick = () => {
+      if (exportRecorder && exportRecorder.state !== 'inactive') {
+        exportRecorder.stop();
+        pause();
+      }
+      clearInterval(exportInterval);
+      document.getElementById('export-overlay').style.display = 'none';
+      showToast('❌ Експорт скасовано');
+    };
+
+    // --- UI Controls & Hotkeys ---
     document.getElementById('btn-play').onclick = togglePlay;
     document.getElementById('btn-start').onclick = () => seek(0);
     document.getElementById('btn-undo').onclick = undo;
@@ -1498,9 +1944,9 @@
       renderTimeline();
     };
 
-    document.getElementById('sel-duration').onchange = e => {
+    document.getElementById('inp-total-duration').onchange = e => {
       saveHistory();
-      state.totalDuration = parseFloat(e.target.value);
+      state.totalDuration = Math.max(2, parseFloat(e.target.value) || 10);
       renderTimeline();
     };
 
@@ -1523,7 +1969,7 @@
       }
     });
 
-    // Boot
+    // Start App
     syncAllUI();
   </script>
 </body>
