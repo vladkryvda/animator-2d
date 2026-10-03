@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -1379,4 +1380,151 @@
           animIn: c.animIn, wiggle: c.wiggle
         })),
         audioClips: state.audioClips.map(a => ({
-          id: a.id, name: a.name, type: a.type, dataUrl: a.data
+          id: a.id, name: a.name, type: a.type, dataUrl: a.dataUrl,
+          startTime: a.startTime, duration: a.duration, volume: a.volume
+        }))
+      };
+
+      const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `doodlecut-${Date.now()}.doodlecut`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    document.getElementById('btn-load').onclick = () => document.getElementById('inp-project').click();
+    document.getElementById('inp-project').onchange = e => {
+      if (e.target.files[0]) loadProject(e.target.files[0]);
+      e.target.value = '';
+    };
+
+    function loadProject(file) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          saveHistory();
+          state.totalDuration = data.totalDuration || 10;
+          document.getElementById('sel-duration').value = state.totalDuration;
+
+          state.clips = (data.clips || []).map(c => {
+            const img = new Image();
+            img.src = c.dataUrl;
+            return { ...c, img };
+          });
+
+          state.audioClips = [];
+          for (const a of (data.audioClips || [])) {
+            const res = await fetch(a.dataUrl);
+            const buf = await res.arrayBuffer();
+            const decoded = await audioCtx.decodeAudioData(buf);
+            state.audioClips.push({ ...a, buffer: decoded });
+          }
+
+          state.selectedId = null;
+          seek(0);
+          syncAllUI();
+        } catch(err) {
+          alert('Невірний формат файлу проекту!');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // --- WebM Video Rendering ---
+    document.getElementById('btn-export').onclick = async () => {
+      const btn = document.getElementById('btn-export');
+      btn.disabled = true;
+      btn.textContent = '⏳ Запис WebM...';
+
+      seek(0);
+      pause();
+
+      const stream = canvas.captureStream(30);
+      const dest = audioCtx.createMediaStreamDestination();
+
+      state.audioClips.forEach(clip => {
+        if (!clip.buffer) return;
+        const s = audioCtx.createBufferSource();
+        s.buffer = clip.buffer;
+        s.connect(dest);
+        s.start(clip.startTime);
+      });
+
+      if (dest.stream.getAudioTracks().length > 0) {
+        stream.addTrack(dest.stream.getAudioTracks()[0]);
+      }
+
+      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      const chunks = [];
+
+      recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `doodle-animation-${Date.now()}.webm`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        btn.disabled = false;
+        btn.textContent = '🎬 Рендер у WebM';
+        seek(0);
+      };
+
+      recorder.start();
+      play();
+
+      const timer = setInterval(() => {
+        if (!state.isPlaying || state.currentTime >= state.totalDuration) {
+          clearInterval(timer);
+          recorder.stop();
+          pause();
+        }
+      }, 100);
+    };
+
+    // --- UI Listeners & Hotkeys ---
+    document.getElementById('btn-play').onclick = togglePlay;
+    document.getElementById('btn-start').onclick = () => seek(0);
+    document.getElementById('btn-undo').onclick = undo;
+    document.getElementById('btn-redo').onclick = redo;
+
+    document.getElementById('timeline-zoom').oninput = e => {
+      state.zoom = parseInt(e.target.value);
+      renderTimeline();
+    };
+
+    document.getElementById('sel-duration').onchange = e => {
+      saveHistory();
+      state.totalDuration = parseFloat(e.target.value);
+      renderTimeline();
+    };
+
+    window.addEventListener('keydown', e => {
+      if (['INPUT', 'SELECT'].includes(document.activeElement.tagName)) return;
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlay();
+      } else if (e.code === 'KeyD' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        duplicateSelected();
+      } else if (e.code === 'KeyS') {
+        e.preventDefault();
+        splitSelected();
+      } else if (e.code === 'Delete' || e.code === 'Backspace') {
+        deleteSelected();
+      } else if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
+        e.shiftKey ? redo() : undo();
+      }
+    });
+
+    // Boot
+    syncAllUI();
+  </script>
+</body>
+</html>
