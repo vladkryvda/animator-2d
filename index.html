@@ -20,9 +20,11 @@
       --font-mono: ui-monospace, "SF Mono", Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", Menlo, Consolas, monospace;
     }
 
-    * {
+    /* Повна заборона виділення тексту при перетягуванні будь-чого */
+    *, *::before, *::after {
       box-sizing: border-box;
-      user-select: none;
+      user-select: none !important;
+      -webkit-user-select: none !important;
       margin: 0;
       padding: 0;
       font-family: var(--font-mono);
@@ -99,6 +101,27 @@
       transform: translateY(1px);
     }
 
+    /* Віджет прозорості */
+    .opacity-widget {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      background: var(--panel);
+      height: 29px;
+    }
+    .opacity-widget span {
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .opacity-slider {
+      width: 60px;
+      height: 4px;
+      accent-color: var(--black);
+      cursor: pointer;
+    }
+
     .btn-record.recording {
       background: var(--black);
       color: var(--white);
@@ -147,7 +170,7 @@
       display: block;
     }
 
-    /* Рамка ручного масштабування поверх Canvas */
+    /* Рамка масштабування */
     .transform-overlay {
       position: absolute;
       inset: 0;
@@ -319,7 +342,6 @@
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
-      user-select: none;
       font-weight: 600;
     }
     .clip:active { cursor: grabbing; }
@@ -350,7 +372,6 @@
     .handle-right { right: 0; border-left: 1px solid var(--border-light); }
     .clip.selected .handle { background: rgba(255,255,255,0.3); }
 
-    /* Голка відтворення (Playhead) */
     .playhead {
       position: absolute;
       top: 0;
@@ -369,7 +390,6 @@
       background: var(--black);
     }
 
-    /* Магнітна лінія-орієнтир притягування */
     .snap-guide {
       position: absolute;
       top: 0;
@@ -426,7 +446,17 @@
 
     <div class="controls-top">
       <button id="btnAspectToggle">[ASPECT: 9:16]</button>
-      <button id="btnFitToggle" title="Клік скидає ручне розтягування">[FIT: CONTAIN]</button>
+      <button id="btnFitToggle" title="Скидає масштабування">[FIT: CONTAIN]</button>
+      
+      <!-- Перемикач режиму масштабування: UNIFORM (пропорційно від центру) чи FREEFORM -->
+      <button id="btnScaleModeToggle" title="Режим розтягування">[SCALE: UNIFORM]</button>
+
+      <!-- Повзунок прозорості (Onion Skin / Overlay) -->
+      <div class="opacity-widget" title="Прозорість вибраного кадру">
+        <span>OPACITY:</span>
+        <input type="range" id="opacitySlider" class="opacity-slider" min="10" max="100" value="100">
+        <span id="opacityLabel" style="width: 28px;">100%</span>
+      </div>
 
       <button id="btnVoice" class="btn-record">
         <span id="voiceText">[REC VOICE]</span>
@@ -444,7 +474,6 @@
     <div class="canvas-wrapper aspect-9-16" id="canvasWrapper">
       <canvas id="playerCanvas" width="1080" height="1920"></canvas>
 
-      <!-- Оверлей для ручного розтягування -->
       <div class="transform-overlay" id="transformOverlay">
         <div class="transform-box" id="transformBox">
           <div class="tf-handle tf-tl" data-dir="tl"></div>
@@ -473,7 +502,7 @@
 
   <footer>
     <div class="timeline-tools">
-      <span>SPACE: PLAY/PAUSE | DEL: DELETE CLIP | МАГНІТНІ СТИКИ: АКТИВНО</span>
+      <span>SPACE: PLAY/PAUSE | DEL: DELETE CLIP | МАГНІТИ: АКТИВНІ</span>
       <span id="clipCountLabel">CLIPS: 0</span>
     </div>
 
@@ -492,7 +521,6 @@
           <div class="playhead-head"></div>
         </div>
 
-        <!-- Лінія магнітного прилипання -->
         <div class="snap-guide" id="snapGuide"></div>
 
         <div class="tracks-area">
@@ -504,7 +532,6 @@
     </div>
   </footer>
 
-  <!-- Модальне вікно експорту -->
   <div class="modal-overlay" id="exportModal">
     <div class="modal-card">
       <div id="exportTitle" style="font-weight:700; text-transform:uppercase;">RENDERING VIDEO</div>
@@ -518,13 +545,17 @@
   </div>
 
   <script>
-    const PPS = 90; // Pixels per second
+    // Забороняємо будь-яке виділення тексту у вікні
+    window.addEventListener('selectstart', (e) => e.preventDefault());
+
+    const PPS = 90;
     const state = {
       currentTime: 0,
       isPlaying: false,
       aspectRatio: '9:16',
       fitMode: 'contain',
-      clips: [], // { id, type, name, start, duration, blob, imgElement, audioBuffer, transform }
+      scaleMode: 'uniform', // 'uniform' (пропорційно від центру) або 'freeform'
+      clips: [],
       selectedClipId: null,
       isRecordingVoice: false
     };
@@ -550,6 +581,9 @@
     const clipCountLabel = document.getElementById('clipCountLabel');
     const btnAspectToggle = document.getElementById('btnAspectToggle');
     const btnFitToggle = document.getElementById('btnFitToggle');
+    const btnScaleModeToggle = document.getElementById('btnScaleModeToggle');
+    const opacitySlider = document.getElementById('opacitySlider');
+    const opacityLabel = document.getElementById('opacityLabel');
     const snapGuide = document.getElementById('snapGuide');
     const transformBox = document.getElementById('transformBox');
 
@@ -588,12 +622,14 @@
             start: c.start,
             duration: c.duration,
             blob: c.blob,
-            transform: c.transform || null
+            transform: c.transform || null,
+            opacity: c.opacity !== undefined ? c.opacity : 1.0
           }));
 
           store.put({
             aspectRatio: state.aspectRatio,
             fitMode: state.fitMode,
+            scaleMode: state.scaleMode,
             currentTime: state.currentTime,
             clips: serializableClips
           }, 'active_project');
@@ -617,10 +653,12 @@
 
           state.aspectRatio = data.aspectRatio || '9:16';
           state.fitMode = data.fitMode || 'contain';
+          state.scaleMode = data.scaleMode || 'uniform';
           state.currentTime = data.currentTime || 0;
 
           btnAspectToggle.innerText = `[ASPECT: ${state.aspectRatio}]`;
           btnFitToggle.innerText = `[FIT: ${state.fitMode.toUpperCase()}]`;
+          btnScaleModeToggle.innerText = `[SCALE: ${state.scaleMode.toUpperCase()}]`;
           updateAspectRatioUI();
 
           const restoredClips = [];
@@ -642,6 +680,7 @@
           state.clips = restoredClips;
           renderTimelineClips();
           seekTo(state.currentTime);
+          updateOpacityControlUI();
           storageStatus.innerText = 'STORAGE: RESTORED';
         };
       } catch (e) {
@@ -661,7 +700,7 @@
       storageStatus.innerText = 'STORAGE: CLEARED';
     });
 
-    // --- ПЕРЕМИКАЧІ ВЕРХНЬОЇ ПАНЕЛІ ---
+    // --- КНОПКИ ВЕРХНЬОЇ ПАНЕЛІ ---
     btnAspectToggle.addEventListener('click', () => {
       state.aspectRatio = (state.aspectRatio === '9:16') ? '16:9' : '9:16';
       btnAspectToggle.innerText = `[ASPECT: ${state.aspectRatio}]`;
@@ -673,14 +712,45 @@
       state.fitMode = (state.fitMode === 'contain') ? 'cover' : 'contain';
       btnFitToggle.innerText = `[FIT: ${state.fitMode.toUpperCase()}]`;
 
-      // Скидаємо ручне розтягування для активного кадру, якщо користувач тисне кнопку FIT
       const activeImg = getActiveImageClip();
       if (activeImg) {
-        activeImg.transform = null;
+        activeImg.transform = null; // скидаємо в чистий дефолтний центр
       }
       renderCanvasFrame();
       triggerAutoSave();
     });
+
+    btnScaleModeToggle.addEventListener('click', () => {
+      state.scaleMode = (state.scaleMode === 'uniform') ? 'freeform' : 'uniform';
+      btnScaleModeToggle.innerText = `[SCALE: ${state.scaleMode.toUpperCase()}]`;
+      triggerAutoSave();
+    });
+
+    // --- ПОВЗУНОК ПРОЗОРОСТІ (OPACITY) ---
+    opacitySlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value);
+      opacityLabel.innerText = `${val}%`;
+      const activeImg = getActiveImageClip();
+      if (activeImg) {
+        activeImg.opacity = val / 100;
+        renderCanvasFrame();
+        triggerAutoSave();
+      }
+    });
+
+    function updateOpacityControlUI() {
+      const activeImg = getActiveImageClip();
+      if (activeImg) {
+        const val = Math.round((activeImg.opacity !== undefined ? activeImg.opacity : 1.0) * 100);
+        opacitySlider.value = val;
+        opacityLabel.innerText = `${val}%`;
+        opacitySlider.disabled = false;
+      } else {
+        opacitySlider.value = 100;
+        opacityLabel.innerText = `100%`;
+        opacitySlider.disabled = true;
+      }
+    }
 
     function updateAspectRatioUI() {
       if (state.aspectRatio === '9:16') {
@@ -709,6 +779,7 @@
     buildRuler();
 
     timeRuler.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
       seekFromEvent(e);
       const onMove = (me) => seekFromEvent(me);
       const onUp = () => {
@@ -729,6 +800,7 @@
       state.currentTime = time;
       updatePlayheadPosition();
       renderCanvasFrame();
+      updateOpacityControlUI();
       if (state.isPlaying) restartAudioPlayback();
     }
 
@@ -740,7 +812,7 @@
       timeCode.innerText = `${m}:${s}.${ms}`;
     }
 
-    // --- ВСТАВКА СКРІНШОТІВ ТА ФАЙЛІВ ---
+    // --- ВСТАВКА СКРІНШОТІВ ---
     window.addEventListener('paste', (e) => {
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -785,13 +857,15 @@
             blob: file,
             start: start,
             duration: 2.0,
-            transform: null // { x, y, w, h }
+            transform: null,
+            opacity: 1.0
           };
 
           state.clips.push(newClip);
           state.selectedClipId = newClip.id;
           renderTimelineClips();
           renderCanvasFrame();
+          updateOpacityControlUI();
           triggerAutoSave();
         };
         img.src = e.target.result;
@@ -817,8 +891,8 @@
       triggerAutoSave();
     }
 
-    // --- МАГНІТНІ СТИКИ (SNAPPING ENGINE) ---
-    const SNAP_DISTANCE_PX = 10; // Зона притягування в пікселях
+    // --- МАГНІТНІ СТИКИ ---
+    const SNAP_DISTANCE_PX = 10;
 
     function getSnapPoints(ignoreClipId) {
       const points = [0, state.currentTime];
@@ -853,7 +927,7 @@
       snapGuide.style.display = 'none';
     }
 
-    // --- ВІДМАЛЬОВКА ТАЙМЛАЙНУ ---
+    // --- ТАЙМЛАЙН РЕНДЕР ---
     function renderTimelineClips() {
       document.querySelectorAll('.clip').forEach(el => el.remove());
       emptyHint.style.display = state.clips.some(c => c.type === 'image') ? 'none' : 'block';
@@ -879,18 +953,22 @@
         clipEl.appendChild(rightHandle);
 
         clipEl.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
           if (e.target.classList.contains('handle')) return;
           state.selectedClipId = clip.id;
           renderTimelineClips();
           renderCanvasFrame();
+          updateOpacityControlUI();
           initDragClip(clip, e);
         });
 
         leftHandle.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
           e.stopPropagation();
           initResizeClip(clip, 'left', e);
         });
         rightHandle.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
           e.stopPropagation();
           initResizeClip(clip, 'right', e);
         });
@@ -899,7 +977,6 @@
       });
     }
 
-    // Перетягування кліпу з магнітним прилипанням
     function initDragClip(clip, startEvent) {
       const startX = startEvent.clientX;
       const initialStart = clip.start;
@@ -911,13 +988,11 @@
         let candidateStart = Math.max(0, initialStart + deltaSec);
         let candidateEnd = candidateStart + clip.duration;
 
-        // Перевіряємо прилипання лівого краю
         const snappedStart = calculateSnap(candidateStart, snapPoints, thresholdSec);
         if (snappedStart !== null) {
           candidateStart = snappedStart;
           showSnapGuide(candidateStart * PPS);
         } else {
-          // Якщо лівий не прилип — перевіряємо правий край
           const snappedEnd = calculateSnap(candidateEnd, snapPoints, thresholdSec);
           if (snappedEnd !== null) {
             candidateStart = Math.max(0, snappedEnd - clip.duration);
@@ -944,7 +1019,6 @@
       window.addEventListener('pointerup', onUp);
     }
 
-    // Зміна розміру з магнітним прилипанням
     function initResizeClip(clip, side, startEvent) {
       const startX = startEvent.clientX;
       const initialStart = clip.start;
@@ -1006,6 +1080,7 @@
         state.selectedClipId = null;
         renderTimelineClips();
         renderCanvasFrame();
+        updateOpacityControlUI();
         triggerAutoSave();
       }
       if (e.code === 'Space') {
@@ -1014,9 +1089,8 @@
       }
     });
 
-    // --- РУЧНЕ РОЗТЯГУВАННЯ КАРТИНКИ НА CANVAS ---
+    // --- РУЧНЕ РОЗТЯГУВАННЯ: ВІДЦЕНТРОВАНЕ / UNIFORM ТА FREEFORM ---
     function getActiveImageClip() {
-      // Пріоритет виділеному кадру, або кадру під курсором часу
       if (state.selectedClipId) {
         const sel = state.clips.find(c => c.id === state.selectedClipId && c.type === 'image');
         if (sel && state.currentTime >= sel.start && state.currentTime < sel.start + sel.duration) {
@@ -1039,6 +1113,7 @@
 
       const w = iw * scale;
       const h = ih * scale;
+      // За замовчуванням строго відцентрована по обох осях
       const x = (cw - w) / 2;
       const y = (ch - h) / 2;
       return { x, y, w, h };
@@ -1061,16 +1136,21 @@
       transformBox.style.display = 'block';
     }
 
-    // Інтерактивне переміщення та розтягування мишкою
     transformBox.addEventListener('pointerdown', (e) => {
       const clip = getActiveImageClip();
       if (!clip) return;
+      e.preventDefault();
       e.stopPropagation();
 
       const dir = e.target.getAttribute('data-dir');
       const startX = e.clientX;
       const startY = e.clientY;
       const initT = { ...clip.transform };
+
+      // Фіксований центр картинки для пропорційного розтягування
+      const centerX = initT.x + initT.w / 2;
+      const centerY = initT.y + initT.h / 2;
+      const aspect = initT.w / initT.h;
 
       const rect = canvas.getBoundingClientRect();
       const ratioX = canvas.width / rect.width;
@@ -1081,11 +1161,35 @@
         const dy = (me.clientY - startY) * ratioY;
 
         if (!dir) {
-          // Переміщення картинки по екрану
+          // Переміщення тіла картинки
           clip.transform.x = initT.x + dx;
           clip.transform.y = initT.y + dy;
+        } else if (state.scaleMode === 'uniform') {
+          // --- РЕЖИМ UNIFORM: розтягується ОДНАКОВО в усі сторони від центру ---
+          const signX = dir.includes('r') ? 1 : (dir.includes('l') ? -1 : 0);
+          const signY = dir.includes('b') ? 1 : (dir.includes('t') ? -1 : 0);
+
+          let deltaGrowth = 0;
+          if (signX !== 0 && signY !== 0) {
+            // Кутові ручки: беремо комбінацію dx і dy
+            deltaGrowth = (dx * signX + (dy * signY) * aspect) / 2;
+          } else if (signX !== 0) {
+            // Бічні ручки
+            deltaGrowth = dx * signX;
+          } else {
+            // Верх/низ
+            deltaGrowth = (dy * signY) * aspect;
+          }
+
+          const newHalfW = Math.max(20, (initT.w / 2) + deltaGrowth);
+          const newHalfH = newHalfW / aspect;
+
+          clip.transform.w = newHalfW * 2;
+          clip.transform.h = newHalfH * 2;
+          clip.transform.x = centerX - newHalfW;
+          clip.transform.y = centerY - newHalfH;
         } else {
-          // Вільне розтягування у будь-який бік
+          // --- РЕЖИМ FREEFORM: можна вільно "помнути" у будь-який бік ---
           if (dir.includes('r')) clip.transform.w = Math.max(20, initT.w + dx);
           if (dir.includes('b')) clip.transform.h = Math.max(20, initT.h + dy);
           if (dir.includes('l')) {
@@ -1113,12 +1217,27 @@
       window.addEventListener('pointerup', onUp);
     });
 
-    // --- РЕНДЕР КАДРУ CANVAS ---
+    // --- РЕНДЕР КАДРУ CANVAS (З ONION SKINNING) ---
     function renderCanvasFrame() {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const activeImageClip = getActiveImageClip();
+
+      // ONION SKINNING: Якщо активний кадр напівпрозорий, показуємо попередній кадр напівпрозорою калькою під ним
+      if (activeImageClip && (activeImageClip.opacity ?? 1) < 1.0) {
+        const prevClips = state.clips
+          .filter(c => c.type === 'image' && c.id !== activeImageClip.id && c.start < activeImageClip.start)
+          .sort((a, b) => b.start - a.start);
+        const prevClip = prevClips[0];
+        if (prevClip && prevClip.imgElement) {
+          const pt = prevClip.transform || getDefaultTransform(prevClip.imgElement);
+          ctx.save();
+          ctx.globalAlpha = 0.45; // Калька попереднього кадру
+          ctx.drawImage(prevClip.imgElement, pt.x, pt.y, pt.w, pt.h);
+          ctx.restore();
+        }
+      }
 
       if (activeImageClip && activeImageClip.imgElement) {
         if (!activeImageClip.transform) {
@@ -1126,7 +1245,11 @@
         }
 
         const t = activeImageClip.transform;
+        ctx.save();
+        ctx.globalAlpha = activeImageClip.opacity !== undefined ? activeImageClip.opacity : 1.0;
         ctx.drawImage(activeImageClip.imgElement, t.x, t.y, t.w, t.h);
+        ctx.restore();
+
         updateTransformBoxUI(activeImageClip);
       } else {
         updateTransformBoxUI(null);
@@ -1148,7 +1271,7 @@
       btnPlayPause.innerText = '[PAUSE]';
       lastTime = performance.now();
       scheduleAudioPlayback();
-      updateTransformBoxUI(null); // ховаємо рамку при програванні
+      updateTransformBoxUI(null);
 
       function loop(now) {
         if (!state.isPlaying) return;
@@ -1175,6 +1298,7 @@
       if (animId) cancelAnimationFrame(animId);
       stopAudioPlayback();
       renderCanvasFrame();
+      updateOpacityControlUI();
       triggerAutoSave();
     }
 
