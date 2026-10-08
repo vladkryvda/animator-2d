@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MEMECLIP // STUDIO (LIGHT)</title>
+  <title>MEMECLIP // STUDIO</title>
   <style>
     :root {
       --bg: #f4f4f5;
@@ -41,7 +41,6 @@
       letter-spacing: 0.2px;
     }
 
-    /* Верхня панель дій */
     header {
       height: 44px;
       background: var(--panel);
@@ -148,6 +147,40 @@
       display: block;
     }
 
+    /* Рамка ручного масштабування поверх Canvas */
+    .transform-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .transform-box {
+      position: absolute;
+      border: 1px dashed var(--black);
+      pointer-events: auto;
+      cursor: move;
+      display: none;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.7);
+    }
+
+    .tf-handle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--white);
+      border: 1px solid var(--black);
+      pointer-events: auto;
+    }
+    .tf-tl { top: -4px; left: -4px; cursor: nwse-resize; }
+    .tf-tr { top: -4px; right: -4px; cursor: nesw-resize; }
+    .tf-bl { bottom: -4px; left: -4px; cursor: nesw-resize; }
+    .tf-br { bottom: -4px; right: -4px; cursor: nwse-resize; }
+    .tf-t  { top: -4px; left: calc(50% - 4px); cursor: ns-resize; }
+    .tf-b  { bottom: -4px; left: calc(50% - 4px); cursor: ns-resize; }
+    .tf-l  { top: calc(50% - 4px); left: -4px; cursor: ew-resize; }
+    .tf-r  { top: calc(50% - 4px); right: -4px; cursor: ew-resize; }
+
     .empty-state-hint {
       position: absolute;
       text-align: center;
@@ -161,7 +194,6 @@
       background: rgba(255, 255, 255, 0.9);
     }
 
-    /* Панель плейбеку */
     .playback-bar {
       margin-top: 10px;
       display: flex;
@@ -241,7 +273,6 @@
       min-width: 3000px;
     }
 
-    /* Лінійка часу */
     .time-ruler {
       height: 24px;
       background: var(--bg);
@@ -261,7 +292,6 @@
       pointer-events: none;
     }
 
-    /* Доріжки та блоки */
     .tracks-area {
       display: flex;
       flex-direction: column;
@@ -307,7 +337,6 @@
       background: #e4e4e7;
     }
 
-    /* Ручки розтягування */
     .handle {
       position: absolute;
       top: 0;
@@ -316,9 +345,7 @@
       cursor: ew-resize;
       background: transparent;
     }
-    .handle:hover {
-      background: rgba(0, 0, 0, 0.2);
-    }
+    .handle:hover { background: rgba(0, 0, 0, 0.2); }
     .handle-left { left: 0; border-right: 1px solid var(--border-light); }
     .handle-right { right: 0; border-left: 1px solid var(--border-light); }
     .clip.selected .handle { background: rgba(255,255,255,0.3); }
@@ -340,6 +367,19 @@
       width: 9px;
       height: 9px;
       background: var(--black);
+    }
+
+    /* Магнітна лінія-орієнтир притягування */
+    .snap-guide {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--black);
+      border-left: 1px dashed var(--black);
+      z-index: 18;
+      pointer-events: none;
+      display: none;
     }
 
     /* Модальне вікно експорту */
@@ -385,9 +425,8 @@
     </div>
 
     <div class="controls-top">
-      <!-- Кнопки-перемикачі замість селектів -->
       <button id="btnAspectToggle">[ASPECT: 9:16]</button>
-      <button id="btnFitToggle">[FIT: CONTAIN]</button>
+      <button id="btnFitToggle" title="Клік скидає ручне розтягування">[FIT: CONTAIN]</button>
 
       <button id="btnVoice" class="btn-record">
         <span id="voiceText">[REC VOICE]</span>
@@ -404,6 +443,21 @@
   <main id="dropZone">
     <div class="canvas-wrapper aspect-9-16" id="canvasWrapper">
       <canvas id="playerCanvas" width="1080" height="1920"></canvas>
+
+      <!-- Оверлей для ручного розтягування -->
+      <div class="transform-overlay" id="transformOverlay">
+        <div class="transform-box" id="transformBox">
+          <div class="tf-handle tf-tl" data-dir="tl"></div>
+          <div class="tf-handle tf-tr" data-dir="tr"></div>
+          <div class="tf-handle tf-bl" data-dir="bl"></div>
+          <div class="tf-handle tf-br" data-dir="br"></div>
+          <div class="tf-handle tf-t" data-dir="t"></div>
+          <div class="tf-handle tf-b" data-dir="b"></div>
+          <div class="tf-handle tf-l" data-dir="l"></div>
+          <div class="tf-handle tf-r" data-dir="r"></div>
+        </div>
+      </div>
+
       <div class="empty-state-hint" id="emptyHint">
         [CTRL + V] PASTE SCREENSHOT<br>
         OR DRAG & DROP MEDIA
@@ -419,7 +473,7 @@
 
   <footer>
     <div class="timeline-tools">
-      <span>SPACE: PLAY/PAUSE | DEL: DELETE CLIP | DRAG BORDERS: TRIM</span>
+      <span>SPACE: PLAY/PAUSE | DEL: DELETE CLIP | МАГНІТНІ СТИКИ: АКТИВНО</span>
       <span id="clipCountLabel">CLIPS: 0</span>
     </div>
 
@@ -438,6 +492,9 @@
           <div class="playhead-head"></div>
         </div>
 
+        <!-- Лінія магнітного прилипання -->
+        <div class="snap-guide" id="snapGuide"></div>
+
         <div class="tracks-area">
           <div class="track" id="track-image"></div>
           <div class="track" id="track-voice"></div>
@@ -447,7 +504,7 @@
     </div>
   </footer>
 
-  <!-- Модалка експорту -->
+  <!-- Модальне вікно експорту -->
   <div class="modal-overlay" id="exportModal">
     <div class="modal-card">
       <div id="exportTitle" style="font-weight:700; text-transform:uppercase;">RENDERING VIDEO</div>
@@ -467,7 +524,7 @@
       isPlaying: false,
       aspectRatio: '9:16',
       fitMode: 'contain',
-      clips: [],
+      clips: [], // { id, type, name, start, duration, blob, imgElement, audioBuffer, transform }
       selectedClipId: null,
       isRecordingVoice: false
     };
@@ -493,6 +550,8 @@
     const clipCountLabel = document.getElementById('clipCountLabel');
     const btnAspectToggle = document.getElementById('btnAspectToggle');
     const btnFitToggle = document.getElementById('btnFitToggle');
+    const snapGuide = document.getElementById('snapGuide');
+    const transformBox = document.getElementById('transformBox');
 
     function initAudioContext() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -528,7 +587,8 @@
             name: c.name,
             start: c.start,
             duration: c.duration,
-            blob: c.blob
+            blob: c.blob,
+            transform: c.transform || null
           }));
 
           store.put({
@@ -601,7 +661,7 @@
       storageStatus.innerText = 'STORAGE: CLEARED';
     });
 
-    // --- КНОПКИ-ПЕРЕМИКАЧІ (ТОГЛИ) ---
+    // --- ПЕРЕМИКАЧІ ВЕРХНЬОЇ ПАНЕЛІ ---
     btnAspectToggle.addEventListener('click', () => {
       state.aspectRatio = (state.aspectRatio === '9:16') ? '16:9' : '9:16';
       btnAspectToggle.innerText = `[ASPECT: ${state.aspectRatio}]`;
@@ -612,6 +672,12 @@
     btnFitToggle.addEventListener('click', () => {
       state.fitMode = (state.fitMode === 'contain') ? 'cover' : 'contain';
       btnFitToggle.innerText = `[FIT: ${state.fitMode.toUpperCase()}]`;
+
+      // Скидаємо ручне розтягування для активного кадру, якщо користувач тисне кнопку FIT
+      const activeImg = getActiveImageClip();
+      if (activeImg) {
+        activeImg.transform = null;
+      }
       renderCanvasFrame();
       triggerAutoSave();
     });
@@ -674,7 +740,7 @@
       timeCode.innerText = `${m}:${s}.${ms}`;
     }
 
-    // --- ВСТАВКА (CTRL + V & DND) ---
+    // --- ВСТАВКА СКРІНШОТІВ ТА ФАЙЛІВ ---
     window.addEventListener('paste', (e) => {
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -711,15 +777,19 @@
           const lastImg = [...state.clips].filter(c => c.type === 'image').pop();
           const start = lastImg ? Math.max(startTime, lastImg.start + lastImg.duration) : startTime;
 
-          state.clips.push({
+          const newClip = {
             id: 'clip_' + Date.now() + Math.random(),
             type: 'image',
             name: file.name || 'FRAME',
             imgElement: img,
             blob: file,
             start: start,
-            duration: 2.0
-          });
+            duration: 2.0,
+            transform: null // { x, y, w, h }
+          };
+
+          state.clips.push(newClip);
+          state.selectedClipId = newClip.id;
           renderTimelineClips();
           renderCanvasFrame();
           triggerAutoSave();
@@ -745,6 +815,42 @@
       });
       renderTimelineClips();
       triggerAutoSave();
+    }
+
+    // --- МАГНІТНІ СТИКИ (SNAPPING ENGINE) ---
+    const SNAP_DISTANCE_PX = 10; // Зона притягування в пікселях
+
+    function getSnapPoints(ignoreClipId) {
+      const points = [0, state.currentTime];
+      state.clips.forEach(c => {
+        if (c.id !== ignoreClipId) {
+          points.push(c.start);
+          points.push(c.start + c.duration);
+        }
+      });
+      return points;
+    }
+
+    function calculateSnap(time, points, thresholdSec) {
+      let nearest = null;
+      let minDiff = thresholdSec;
+      for (let p of points) {
+        const diff = Math.abs(time - p);
+        if (diff < minDiff) {
+          minDiff = diff;
+          nearest = p;
+        }
+      }
+      return nearest;
+    }
+
+    function showSnapGuide(pixelX) {
+      snapGuide.style.left = pixelX + 'px';
+      snapGuide.style.display = 'block';
+    }
+
+    function hideSnapGuide() {
+      snapGuide.style.display = 'none';
     }
 
     // --- ВІДМАЛЬОВКА ТАЙМЛАЙНУ ---
@@ -776,6 +882,7 @@
           if (e.target.classList.contains('handle')) return;
           state.selectedClipId = clip.id;
           renderTimelineClips();
+          renderCanvasFrame();
           initDragClip(clip, e);
         });
 
@@ -792,42 +899,88 @@
       });
     }
 
+    // Перетягування кліпу з магнітним прилипанням
     function initDragClip(clip, startEvent) {
       const startX = startEvent.clientX;
       const initialStart = clip.start;
+      const snapPoints = getSnapPoints(clip.id);
+      const thresholdSec = SNAP_DISTANCE_PX / PPS;
 
       const onMove = (e) => {
-        clip.start = Math.max(0, initialStart + (e.clientX - startX) / PPS);
+        const deltaSec = (e.clientX - startX) / PPS;
+        let candidateStart = Math.max(0, initialStart + deltaSec);
+        let candidateEnd = candidateStart + clip.duration;
+
+        // Перевіряємо прилипання лівого краю
+        const snappedStart = calculateSnap(candidateStart, snapPoints, thresholdSec);
+        if (snappedStart !== null) {
+          candidateStart = snappedStart;
+          showSnapGuide(candidateStart * PPS);
+        } else {
+          // Якщо лівий не прилип — перевіряємо правий край
+          const snappedEnd = calculateSnap(candidateEnd, snapPoints, thresholdSec);
+          if (snappedEnd !== null) {
+            candidateStart = Math.max(0, snappedEnd - clip.duration);
+            showSnapGuide(snappedEnd * PPS);
+          } else {
+            hideSnapGuide();
+          }
+        }
+
+        clip.start = candidateStart;
         const el = document.getElementById(clip.id);
         if (el) el.style.left = (clip.start * PPS) + 'px';
         renderCanvasFrame();
       };
+
       const onUp = () => {
+        hideSnapGuide();
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onUp);
         triggerAutoSave();
       };
+
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onUp);
     }
 
+    // Зміна розміру з магнітним прилипанням
     function initResizeClip(clip, side, startEvent) {
       const startX = startEvent.clientX;
       const initialStart = clip.start;
       const initialDuration = clip.duration;
+      const snapPoints = getSnapPoints(clip.id);
+      const thresholdSec = SNAP_DISTANCE_PX / PPS;
 
       const onMove = (e) => {
         const delta = (e.clientX - startX) / PPS;
+
         if (side === 'right') {
-          clip.duration = Math.max(0.1, initialDuration + delta);
+          let candidateEnd = initialStart + initialDuration + delta;
+          const snappedEnd = calculateSnap(candidateEnd, snapPoints, thresholdSec);
+          if (snappedEnd !== null) {
+            candidateEnd = snappedEnd;
+            showSnapGuide(candidateEnd * PPS);
+          } else {
+            hideSnapGuide();
+          }
+          clip.duration = Math.max(0.08, candidateEnd - clip.start);
         } else {
-          const newStart = Math.max(0, initialStart + delta);
-          const newDuration = initialDuration - (newStart - initialStart);
-          if (newDuration > 0.1) {
-            clip.start = newStart;
-            clip.duration = newDuration;
+          let candidateStart = initialStart + delta;
+          const snappedStart = calculateSnap(candidateStart, snapPoints, thresholdSec);
+          if (snappedStart !== null) {
+            candidateStart = snappedStart;
+            showSnapGuide(candidateStart * PPS);
+          } else {
+            hideSnapGuide();
+          }
+          const candidateDuration = (initialStart + initialDuration) - candidateStart;
+          if (candidateDuration > 0.08 && candidateStart >= 0) {
+            clip.start = candidateStart;
+            clip.duration = candidateDuration;
           }
         }
+
         const el = document.getElementById(clip.id);
         if (el) {
           el.style.left = (clip.start * PPS) + 'px';
@@ -835,11 +988,14 @@
         }
         renderCanvasFrame();
       };
+
       const onUp = () => {
+        hideSnapGuide();
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onUp);
         triggerAutoSave();
       };
+
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onUp);
     }
@@ -858,31 +1014,126 @@
       }
     });
 
-    // --- CANVAS КАДР ---
+    // --- РУЧНЕ РОЗТЯГУВАННЯ КАРТИНКИ НА CANVAS ---
+    function getActiveImageClip() {
+      // Пріоритет виділеному кадру, або кадру під курсором часу
+      if (state.selectedClipId) {
+        const sel = state.clips.find(c => c.id === state.selectedClipId && c.type === 'image');
+        if (sel && state.currentTime >= sel.start && state.currentTime < sel.start + sel.duration) {
+          return sel;
+        }
+      }
+      return state.clips
+        .filter(c => c.type === 'image')
+        .find(c => state.currentTime >= c.start && state.currentTime < (c.start + c.duration));
+    }
+
+    function getDefaultTransform(img) {
+      const cw = canvas.width, ch = canvas.height;
+      const iw = img.naturalWidth || img.width;
+      const ih = img.naturalHeight || img.height;
+
+      const scale = (state.fitMode === 'contain') 
+        ? Math.min(cw / iw, ch / ih) 
+        : Math.max(cw / iw, ch / ih);
+
+      const w = iw * scale;
+      const h = ih * scale;
+      const x = (cw - w) / 2;
+      const y = (ch - h) / 2;
+      return { x, y, w, h };
+    }
+
+    function updateTransformBoxUI(clip) {
+      if (!clip || !clip.transform || state.isPlaying) {
+        transformBox.style.display = 'none';
+        return;
+      }
+
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = rect.width / canvas.width;
+      const scaleY = rect.height / canvas.height;
+
+      transformBox.style.left = (clip.transform.x * scaleX) + 'px';
+      transformBox.style.top = (clip.transform.y * scaleY) + 'px';
+      transformBox.style.width = (clip.transform.w * scaleX) + 'px';
+      transformBox.style.height = (clip.transform.h * scaleY) + 'px';
+      transformBox.style.display = 'block';
+    }
+
+    // Інтерактивне переміщення та розтягування мишкою
+    transformBox.addEventListener('pointerdown', (e) => {
+      const clip = getActiveImageClip();
+      if (!clip) return;
+      e.stopPropagation();
+
+      const dir = e.target.getAttribute('data-dir');
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const initT = { ...clip.transform };
+
+      const rect = canvas.getBoundingClientRect();
+      const ratioX = canvas.width / rect.width;
+      const ratioY = canvas.height / rect.height;
+
+      const onMove = (me) => {
+        const dx = (me.clientX - startX) * ratioX;
+        const dy = (me.clientY - startY) * ratioY;
+
+        if (!dir) {
+          // Переміщення картинки по екрану
+          clip.transform.x = initT.x + dx;
+          clip.transform.y = initT.y + dy;
+        } else {
+          // Вільне розтягування у будь-який бік
+          if (dir.includes('r')) clip.transform.w = Math.max(20, initT.w + dx);
+          if (dir.includes('b')) clip.transform.h = Math.max(20, initT.h + dy);
+          if (dir.includes('l')) {
+            const newW = Math.max(20, initT.w - dx);
+            clip.transform.x = initT.x + (initT.w - newW);
+            clip.transform.w = newW;
+          }
+          if (dir.includes('t')) {
+            const newH = Math.max(20, initT.h - dy);
+            clip.transform.y = initT.y + (initT.h - newH);
+            clip.transform.h = newH;
+          }
+        }
+
+        renderCanvasFrame();
+      };
+
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        triggerAutoSave();
+      };
+
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    });
+
+    // --- РЕНДЕР КАДРУ CANVAS ---
     function renderCanvasFrame() {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      const currentImageClip = state.clips
-        .filter(c => c.type === 'image')
-        .find(c => state.currentTime >= c.start && state.currentTime < (c.start + c.duration));
+      const activeImageClip = getActiveImageClip();
 
-      if (currentImageClip && currentImageClip.imgElement) {
-        const img = currentImageClip.imgElement;
-        const cw = canvas.width, ch = canvas.height;
-        const iw = img.naturalWidth || img.width;
-        const ih = img.naturalHeight || img.height;
+      if (activeImageClip && activeImageClip.imgElement) {
+        if (!activeImageClip.transform) {
+          activeImageClip.transform = getDefaultTransform(activeImageClip.imgElement);
+        }
 
-        const scale = (state.fitMode === 'contain') 
-          ? Math.min(cw / iw, ch / ih) 
-          : Math.max(cw / iw, ch / ih);
-
-        const dw = iw * scale, dh = ih * scale;
-        ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+        const t = activeImageClip.transform;
+        ctx.drawImage(activeImageClip.imgElement, t.x, t.y, t.w, t.h);
+        updateTransformBoxUI(activeImageClip);
+      } else {
+        updateTransformBoxUI(null);
       }
     }
 
-    // --- ПЛЕЙБЕК ---
+    // --- ПЛЕЙБЕК ТА АУДІО ---
     let animId = null;
     let lastTime = 0;
 
@@ -897,6 +1148,7 @@
       btnPlayPause.innerText = '[PAUSE]';
       lastTime = performance.now();
       scheduleAudioPlayback();
+      updateTransformBoxUI(null); // ховаємо рамку при програванні
 
       function loop(now) {
         if (!state.isPlaying) return;
@@ -922,6 +1174,7 @@
       btnPlayPause.innerText = '[PLAY]';
       if (animId) cancelAnimationFrame(animId);
       stopAudioPlayback();
+      renderCanvasFrame();
       triggerAutoSave();
     }
 
@@ -958,7 +1211,7 @@
       if (state.isPlaying) scheduleAudioPlayback();
     }
 
-    // --- ВОЙС-ОВЕР ---
+    // --- ВОЙС-ОВЕР (RECORD VOICE) ---
     btnVoice.addEventListener('click', async () => {
       initAudioContext();
       if (!state.isRecordingVoice) {
@@ -994,12 +1247,13 @@
       }
     });
 
-    // --- ФІКС ЕКСПОРТУ ВІДЕО ---
+    // --- ЕКСПОРТ ВІДЕО ---
     document.getElementById('btnExport').addEventListener('click', async () => {
       if (state.clips.length === 0) return alert('NO CLIPS FOUND');
 
       initAudioContext();
       pausePlayback();
+      updateTransformBoxUI(null);
 
       const modal = document.getElementById('exportModal');
       const pFill = document.getElementById('exportProgress');
@@ -1025,7 +1279,6 @@
 
       const exportStream = new MediaStream(tracks);
 
-      // Визначаємо підтримуваний MIME-тип браузера
       const mimeCandidates = [
         'video/mp4;codecs=avc1,mp4a.40.2',
         'video/mp4',
@@ -1061,7 +1314,6 @@
         exportTitle.innerText = 'EXPORT COMPLETE';
         pFill.style.width = '100%';
 
-        // Авто-завантаження + видимі кнопки на випадок блокування браузером
         statusArea.innerHTML = `
           <div style="margin-top:8px; display:flex; gap:8px; justify-content:center;">
             <button id="btnDownloadFile" style="background:#000; color:#fff; padding:6px 14px;">[DOWNLOAD .${ext.toUpperCase()}]</button>
@@ -1088,8 +1340,7 @@
       };
 
       recorder.onstop = finishExport;
-
-      recorder.start(100); // збирати чанки кожні 100мс
+      recorder.start(100);
       state.currentTime = 0;
 
       const sources = [];
@@ -1119,10 +1370,7 @@
         if (elapsed < maxDuration) {
           requestAnimationFrame(renderStep);
         } else {
-          // Зупиняємо аудіоджерела
           sources.forEach(s => { try { s.stop(); } catch(e){} });
-          
-          // Примусово зупиняємо всі треки стріму (щоб MediaRecorder не чекав вічно)
           exportStream.getTracks().forEach(t => t.stop());
           if (dest) dest.stream.getTracks().forEach(t => t.stop());
 
@@ -1135,7 +1383,7 @@
       requestAnimationFrame(renderStep);
     });
 
-    // Старт
+    // Ініціалізація
     loadProjectFromDB();
     renderCanvasFrame();
   </script>
