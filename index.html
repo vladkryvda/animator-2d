@@ -3,18 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MEMECLIP // STUDIO</title>
+  <title>MEMECLIP // STUDIO (LIGHT)</title>
   <style>
     :root {
-      --bg: #09090b;
-      --panel: #111113;
-      --track-bg: #141416;
-      --border: #27272a;
-      --border-bright: #52525b;
-      --text: #f4f4f5;
-      --text-muted: #71717a;
-      --clip-bg: #1c1c1f;
-      --clip-border: #3f3f46;
+      --bg: #f4f4f5;
+      --panel: #ffffff;
+      --track-bg: #fafafa;
+      --border: #18181b;
+      --border-light: #d4d4d8;
+      --text: #09090b;
+      --text-muted: #52525b;
+      --clip-bg: #ffffff;
+      --clip-border: #18181b;
+      --black: #000000;
       --white: #ffffff;
       --font-mono: ui-monospace, "SF Mono", Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", Menlo, Consolas, monospace;
     }
@@ -26,7 +27,7 @@
       padding: 0;
       font-family: var(--font-mono);
       outline: none;
-      border-radius: 0 !important; /* Суворий прямокутний стиль */
+      border-radius: 0 !important;
     }
 
     body {
@@ -66,6 +67,7 @@
       border: 1px solid var(--border);
       padding: 2px 6px;
       text-transform: uppercase;
+      background: var(--bg);
     }
 
     .controls-top {
@@ -74,7 +76,7 @@
       gap: 6px;
     }
 
-    button, select {
+    button {
       background: var(--panel);
       color: var(--text);
       border: 1px solid var(--border);
@@ -85,13 +87,13 @@
       align-items: center;
       gap: 6px;
       text-transform: uppercase;
-      transition: background 0.1s, color 0.1s, border-color 0.1s;
+      font-weight: 600;
+      transition: background 0.1s, color 0.1s;
     }
 
-    button:hover, select:hover {
-      background: var(--text);
-      color: var(--bg);
-      border-color: var(--text);
+    button:hover {
+      background: var(--black);
+      color: var(--white);
     }
 
     button:active {
@@ -99,20 +101,19 @@
     }
 
     .btn-record.recording {
-      background: var(--text);
-      color: var(--bg);
-      border-color: var(--text);
-      animation: blink 1s infinite alternate;
+      background: var(--black);
+      color: var(--white);
+      animation: blink 0.8s infinite alternate;
     }
     @keyframes blink {
-      from { opacity: 0.6; }
+      from { opacity: 0.5; }
       to { opacity: 1; }
     }
 
     .btn-danger:hover {
-      background: #7f1d1d;
+      background: #b91c1c;
       color: #fff;
-      border-color: #ef4444;
+      border-color: #b91c1c;
     }
 
     /* Візуальне прев'ю */
@@ -122,7 +123,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #000000;
+      background: #e4e4e7;
       position: relative;
       overflow: hidden;
       padding: 12px;
@@ -130,11 +131,12 @@
 
     .canvas-wrapper {
       position: relative;
-      background: #09090b;
+      background: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
       border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     }
 
     .aspect-9-16 { width: 330px; height: 586px; }
@@ -156,6 +158,7 @@
       padding: 16px;
       text-transform: uppercase;
       border: 1px dashed var(--border);
+      background: rgba(255, 255, 255, 0.9);
     }
 
     /* Панель плейбеку */
@@ -177,6 +180,7 @@
       text-align: center;
       border-left: 1px solid var(--border);
       border-right: 1px solid var(--border);
+      font-weight: 700;
     }
 
     /* Таймлайн */
@@ -190,7 +194,7 @@
 
     .timeline-tools {
       height: 28px;
-      background: var(--panel);
+      background: var(--bg);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -223,23 +227,24 @@
       align-items: center;
       padding-left: 10px;
       font-size: 10px;
-      color: var(--text-muted);
+      font-weight: 700;
+      color: var(--text);
       text-transform: uppercase;
       border-bottom: 1px solid var(--border);
     }
-    .track-header:first-child { height: 24px; }
+    .track-header:first-child { height: 24px; background: var(--bg); }
 
     .timeline-scroll-area {
       flex: 1;
       position: relative;
-      background: var(--bg);
+      background: #ffffff;
       min-width: 3000px;
     }
 
     /* Лінійка часу */
     .time-ruler {
       height: 24px;
-      background: var(--panel);
+      background: var(--bg);
       border-bottom: 1px solid var(--border);
       position: relative;
       cursor: crosshair;
@@ -248,7 +253,7 @@
       position: absolute;
       top: 0;
       bottom: 0;
-      border-left: 1px solid var(--border);
+      border-left: 1px solid var(--border-light);
       font-size: 9px;
       color: var(--text-muted);
       padding-left: 4px;
@@ -265,7 +270,7 @@
     .track {
       height: 52px;
       background: var(--track-bg);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--border-light);
       position: relative;
     }
 
@@ -274,7 +279,7 @@
       top: 4px;
       height: 43px;
       background: var(--clip-bg);
-      border: 1px solid var(--clip-border);
+      border: 1px solid var(--border);
       display: flex;
       align-items: center;
       padding: 0 8px;
@@ -285,30 +290,38 @@
       white-space: nowrap;
       text-overflow: ellipsis;
       user-select: none;
+      font-weight: 600;
     }
     .clip:active { cursor: grabbing; }
     .clip.selected {
-      border: 1px solid var(--white);
-      background: #27272a;
+      background: var(--black);
+      color: var(--white);
+      border: 1px solid var(--black);
     }
 
-    .clip.type-voice { border-style: dashed; }
+    .clip.type-voice { 
+      border-style: dashed;
+      background: #f4f4f5;
+    }
+    .clip.type-sfx {
+      background: #e4e4e7;
+    }
 
     /* Ручки розтягування */
     .handle {
       position: absolute;
       top: 0;
       bottom: 0;
-      width: 6px;
+      width: 8px;
       cursor: ew-resize;
       background: transparent;
-      border: 1px solid transparent;
     }
     .handle:hover {
-      background: var(--text-muted);
+      background: rgba(0, 0, 0, 0.2);
     }
-    .handle-left { left: 0; border-right: 1px solid var(--border); }
-    .handle-right { right: 0; border-left: 1px solid var(--border); }
+    .handle-left { left: 0; border-right: 1px solid var(--border-light); }
+    .handle-right { right: 0; border-left: 1px solid var(--border-light); }
+    .clip.selected .handle { background: rgba(255,255,255,0.3); }
 
     /* Голка відтворення (Playhead) */
     .playhead {
@@ -316,7 +329,7 @@
       top: 0;
       bottom: 0;
       width: 1px;
-      background: var(--white);
+      background: var(--black);
       z-index: 20;
       pointer-events: none;
     }
@@ -326,37 +339,39 @@
       left: -4px;
       width: 9px;
       height: 9px;
-      background: var(--white);
+      background: var(--black);
     }
 
-    /* Модальне вікно */
+    /* Модальне вікно експорту */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.5);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 100;
+      backdrop-filter: blur(2px);
     }
     .modal-card {
       background: var(--panel);
-      padding: 20px;
-      border: 1px solid var(--border-bright);
-      width: 320px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      width: 340px;
       text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
     }
     .progress-bar {
       width: 100%;
-      height: 2px;
-      background: var(--border);
+      height: 4px;
+      background: var(--border-light);
       margin: 16px 0;
       overflow: hidden;
     }
     .progress-fill {
       width: 0%;
       height: 100%;
-      background: var(--white);
+      background: var(--black);
       transition: width 0.05s;
     }
   </style>
@@ -366,19 +381,13 @@
   <header>
     <div class="brand">
       <span>MEMECLIP //</span>
-      <span class="status-badge" id="storageStatus">STORAGE: IDB READY</span>
+      <span class="status-badge" id="storageStatus">STORAGE: READY</span>
     </div>
 
     <div class="controls-top">
-      <select id="aspectSelect">
-        <option value="9:16">ASPECT [9:16]</option>
-        <option value="16:9">ASPECT [16:9]</option>
-      </select>
-
-      <select id="fitSelect">
-        <option value="contain">FIT: CONTAIN</option>
-        <option value="cover">FIT: COVER</option>
-      </select>
+      <!-- Кнопки-перемикачі замість селектів -->
+      <button id="btnAspectToggle">[ASPECT: 9:16]</button>
+      <button id="btnFitToggle">[FIT: CONTAIN]</button>
 
       <button id="btnVoice" class="btn-record">
         <span id="voiceText">[REC VOICE]</span>
@@ -387,7 +396,7 @@
       <button id="btnAddAudio">[+ AUDIO]</button>
       <input type="file" id="audioFileInput" accept="audio/*" style="display:none">
 
-      <button id="btnExport">[EXPORT VIDEO]</button>
+      <button id="btnExport" style="background:var(--black); color:var(--white);">[EXPORT VIDEO]</button>
       <button id="btnClearProject" class="btn-danger" title="Очистити все">[RESET]</button>
     </div>
   </header>
@@ -438,25 +447,27 @@
     </div>
   </footer>
 
+  <!-- Модалка експорту -->
   <div class="modal-overlay" id="exportModal">
     <div class="modal-card">
-      <div style="font-weight:700; text-transform:uppercase;">RENDERING VIDEO</div>
+      <div id="exportTitle" style="font-weight:700; text-transform:uppercase;">RENDERING VIDEO</div>
       <div class="progress-bar">
         <div class="progress-fill" id="exportProgress"></div>
       </div>
-      <span id="exportProgressText" style="color: var(--text-muted);">0%</span>
+      <div id="exportStatusArea">
+        <span id="exportProgressText" style="color: var(--text-muted); font-weight: bold;">0%</span>
+      </div>
     </div>
   </div>
 
   <script>
-    // --- ДАНИЙ КОНФІГ ТА СТАН ---
     const PPS = 90; // Pixels per second
     const state = {
       currentTime: 0,
       isPlaying: false,
       aspectRatio: '9:16',
       fitMode: 'contain',
-      clips: [], // { id, type, name, start, duration, blob, imgElement, audioBuffer }
+      clips: [],
       selectedClipId: null,
       isRecordingVoice: false
     };
@@ -467,7 +478,6 @@
     let voiceChunks = [];
     let recordStartTime = 0;
 
-    // DOM посилання
     const canvas = document.getElementById('playerCanvas');
     const ctx = canvas.getContext('2d');
     const canvasWrapper = document.getElementById('canvasWrapper');
@@ -481,22 +491,22 @@
     const voiceText = document.getElementById('voiceText');
     const storageStatus = document.getElementById('storageStatus');
     const clipCountLabel = document.getElementById('clipCountLabel');
+    const btnAspectToggle = document.getElementById('btnAspectToggle');
+    const btnFitToggle = document.getElementById('btnFitToggle');
 
     function initAudioContext() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
     }
 
-    // --- INDEXEDDB: ПОВНЕ ЛОКАЛЬНЕ ЗБЕРЕЖЕННЯ ---
+    // --- INDEXEDDB: АВТО-ЗБЕРЕЖЕННЯ ---
     const DB_NAME = 'MemeClipDB';
     const STORE_NAME = 'project_store';
 
     function openDB() {
       return new Promise((resolve, reject) => {
         const req = indexedDB.open(DB_NAME, 1);
-        req.onupgradeneeded = () => {
-          req.result.createObjectStore(STORE_NAME);
-        };
+        req.onupgradeneeded = () => req.result.createObjectStore(STORE_NAME);
         req.onsuccess = () => resolve(req.result);
         req.onerror = () => reject(req.error);
       });
@@ -521,17 +531,15 @@
             blob: c.blob
           }));
 
-          const payload = {
+          store.put({
             aspectRatio: state.aspectRatio,
             fitMode: state.fitMode,
             currentTime: state.currentTime,
             clips: serializableClips
-          };
+          }, 'active_project');
 
-          store.put(payload, 'active_project');
-          storageStatus.innerText = 'STORAGE: SAVED LOCALLY';
+          storageStatus.innerText = 'STORAGE: SAVED';
         } catch (e) {
-          console.error(e);
           storageStatus.innerText = 'STORAGE: SAVE ERROR';
         }
       }, 300);
@@ -541,8 +549,7 @@
       try {
         const db = await openDB();
         const tx = db.transaction(STORE_NAME, 'readonly');
-        const store = tx.objectStore(STORE_NAME);
-        const req = store.get('active_project');
+        const req = tx.objectStore(STORE_NAME).get('active_project');
 
         req.onsuccess = async () => {
           const data = req.result;
@@ -552,8 +559,8 @@
           state.fitMode = data.fitMode || 'contain';
           state.currentTime = data.currentTime || 0;
 
-          document.getElementById('aspectSelect').value = state.aspectRatio;
-          document.getElementById('fitSelect').value = state.fitMode;
+          btnAspectToggle.innerText = `[ASPECT: ${state.aspectRatio}]`;
+          btnFitToggle.innerText = `[FIT: ${state.fitMode.toUpperCase()}]`;
           updateAspectRatioUI();
 
           const restoredClips = [];
@@ -582,7 +589,6 @@
       }
     }
 
-    // Повне скидання проєкту
     document.getElementById('btnClearProject').addEventListener('click', async () => {
       if (!confirm('Очистити проєкт і видалити всі кадри?')) return;
       state.clips = [];
@@ -594,6 +600,34 @@
       seekTo(0);
       storageStatus.innerText = 'STORAGE: CLEARED';
     });
+
+    // --- КНОПКИ-ПЕРЕМИКАЧІ (ТОГЛИ) ---
+    btnAspectToggle.addEventListener('click', () => {
+      state.aspectRatio = (state.aspectRatio === '9:16') ? '16:9' : '9:16';
+      btnAspectToggle.innerText = `[ASPECT: ${state.aspectRatio}]`;
+      updateAspectRatioUI();
+      triggerAutoSave();
+    });
+
+    btnFitToggle.addEventListener('click', () => {
+      state.fitMode = (state.fitMode === 'contain') ? 'cover' : 'contain';
+      btnFitToggle.innerText = `[FIT: ${state.fitMode.toUpperCase()}]`;
+      renderCanvasFrame();
+      triggerAutoSave();
+    });
+
+    function updateAspectRatioUI() {
+      if (state.aspectRatio === '9:16') {
+        canvasWrapper.className = 'canvas-wrapper aspect-9-16';
+        canvas.width = 1080;
+        canvas.height = 1920;
+      } else {
+        canvasWrapper.className = 'canvas-wrapper aspect-16-9';
+        canvas.width = 1920;
+        canvas.height = 1080;
+      }
+      renderCanvasFrame();
+    }
 
     // --- ЛІНІЙКА ЧАСУ ---
     function buildRuler() {
@@ -640,33 +674,7 @@
       timeCode.innerText = `${m}:${s}.${ms}`;
     }
 
-    // --- ФОРМАТ ТА МАСШТАБ ---
-    function updateAspectRatioUI() {
-      if (state.aspectRatio === '9:16') {
-        canvasWrapper.className = 'canvas-wrapper aspect-9-16';
-        canvas.width = 1080;
-        canvas.height = 1920;
-      } else {
-        canvasWrapper.className = 'canvas-wrapper aspect-16-9';
-        canvas.width = 1920;
-        canvas.height = 1080;
-      }
-      renderCanvasFrame();
-    }
-
-    document.getElementById('aspectSelect').addEventListener('change', (e) => {
-      state.aspectRatio = e.target.value;
-      updateAspectRatioUI();
-      triggerAutoSave();
-    });
-
-    document.getElementById('fitSelect').addEventListener('change', (e) => {
-      state.fitMode = e.target.value;
-      renderCanvasFrame();
-      triggerAutoSave();
-    });
-
-    // --- СТВОРЕННЯ КАДРІВ (CTRL + V & DND) ---
+    // --- ВСТАВКА (CTRL + V & DND) ---
     window.addEventListener('paste', (e) => {
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -754,7 +762,7 @@
         clipEl.id = clip.id;
         clipEl.innerText = clip.name;
         clipEl.style.left = (clip.start * PPS) + 'px';
-        clipEl.style.width = Math.max(12, clip.duration * PPS) + 'px';
+        clipEl.style.width = Math.max(14, clip.duration * PPS) + 'px';
 
         const leftHandle = document.createElement('div');
         leftHandle.className = 'handle handle-left';
@@ -850,9 +858,9 @@
       }
     });
 
-    // --- РЕНДЕР КАДРУ CANVAS ---
+    // --- CANVAS КАДР ---
     function renderCanvasFrame() {
-      ctx.fillStyle = '#09090b';
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const currentImageClip = state.clips
@@ -874,7 +882,7 @@
       }
     }
 
-    // --- ПЛЕЙБЕК ТА АУДІО ---
+    // --- ПЛЕЙБЕК ---
     let animId = null;
     let lastTime = 0;
 
@@ -950,7 +958,7 @@
       if (state.isPlaying) scheduleAudioPlayback();
     }
 
-    // --- ВОЙС-ОВЕР (RECORD VOICE) ---
+    // --- ВОЙС-ОВЕР ---
     btnVoice.addEventListener('click', async () => {
       initAudioContext();
       if (!state.isRecordingVoice) {
@@ -986,7 +994,7 @@
       }
     });
 
-    // --- ЕКСПОРТ ВІДЕО ---
+    // --- ФІКС ЕКСПОРТУ ВІДЕО ---
     document.getElementById('btnExport').addEventListener('click', async () => {
       if (state.clips.length === 0) return alert('NO CLIPS FOUND');
 
@@ -995,71 +1003,139 @@
 
       const modal = document.getElementById('exportModal');
       const pFill = document.getElementById('exportProgress');
-      const pText = document.getElementById('exportProgressText');
+      const statusArea = document.getElementById('exportStatusArea');
+      const exportTitle = document.getElementById('exportTitle');
+
+      exportTitle.innerText = 'RENDERING VIDEO';
+      statusArea.innerHTML = '<span id="exportProgressText" style="color: var(--text-muted); font-weight: bold;">0%</span>';
+      pFill.style.width = '0%';
       modal.style.display = 'flex';
 
-      const maxDuration = Math.max(...state.clips.map(c => c.start + c.duration));
-      const dest = audioCtx.createMediaStreamDestination();
+      const maxDuration = Math.max(0.5, ...state.clips.map(c => c.start + c.duration));
+      const hasAudio = state.clips.some(c => c.type === 'voice' || c.type === 'sfx');
+
       const canvasStream = canvas.captureStream(30);
-      const exportStream = new MediaStream([
-        ...canvasStream.getVideoTracks(),
-        ...dest.stream.getAudioTracks()
-      ]);
+      const tracks = [...canvasStream.getVideoTracks()];
+
+      let dest = null;
+      if (hasAudio) {
+        dest = audioCtx.createMediaStreamDestination();
+        tracks.push(...dest.stream.getAudioTracks());
+      }
+
+      const exportStream = new MediaStream(tracks);
+
+      // Визначаємо підтримуваний MIME-тип браузера
+      const mimeCandidates = [
+        'video/mp4;codecs=avc1,mp4a.40.2',
+        'video/mp4',
+        'video/webm;codecs=vp9,opus',
+        'video/webm;codecs=vp8,opus',
+        'video/webm'
+      ];
+      let selectedMime = '';
+      for (const m of mimeCandidates) {
+        if (MediaRecorder.isTypeSupported(m)) {
+          selectedMime = m;
+          break;
+        }
+      }
 
       let recorder;
       try {
-        recorder = new MediaRecorder(exportStream, { mimeType: 'video/webm;codecs=vp9,opus' });
-      } catch (e) {
+        recorder = selectedMime ? new MediaRecorder(exportStream, { mimeType: selectedMime }) : new MediaRecorder(exportStream);
+      } catch (err) {
         recorder = new MediaRecorder(exportStream);
       }
 
       const chunks = [];
-      recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `animatic_${Date.now()}.webm`;
-        a.click();
-        modal.style.display = 'none';
-        seekTo(0);
+      recorder.ondataavailable = e => {
+        if (e.data && e.data.size > 0) chunks.push(e.data);
       };
 
-      recorder.start();
+      const finishExport = () => {
+        const ext = (selectedMime && selectedMime.includes('mp4')) ? 'mp4' : 'webm';
+        const finalBlob = new Blob(chunks, { type: selectedMime || 'video/webm' });
+        const downloadUrl = URL.createObjectURL(finalBlob);
+
+        exportTitle.innerText = 'EXPORT COMPLETE';
+        pFill.style.width = '100%';
+
+        // Авто-завантаження + видимі кнопки на випадок блокування браузером
+        statusArea.innerHTML = `
+          <div style="margin-top:8px; display:flex; gap:8px; justify-content:center;">
+            <button id="btnDownloadFile" style="background:#000; color:#fff; padding:6px 14px;">[DOWNLOAD .${ext.toUpperCase()}]</button>
+            <button id="btnCloseExportModal" style="background:#fff; color:#000; padding:6px 14px;">[CLOSE]</button>
+          </div>
+        `;
+
+        const triggerDownload = () => {
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = `animatic_${Date.now()}.${ext}`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        };
+
+        triggerDownload();
+
+        document.getElementById('btnDownloadFile').addEventListener('click', triggerDownload);
+        document.getElementById('btnCloseExportModal').addEventListener('click', () => {
+          modal.style.display = 'none';
+          seekTo(0);
+        });
+      };
+
+      recorder.onstop = finishExport;
+
+      recorder.start(100); // збирати чанки кожні 100мс
       state.currentTime = 0;
 
       const sources = [];
-      state.clips.filter(c => c.type === 'voice' || c.type === 'sfx').forEach(clip => {
-        const src = audioCtx.createBufferSource();
-        src.buffer = clip.audioBuffer;
-        src.connect(dest);
-        src.connect(audioCtx.destination);
-        src.start(audioCtx.currentTime + clip.start);
-        sources.push(src);
-      });
+      if (hasAudio && dest) {
+        state.clips.filter(c => c.type === 'voice' || c.type === 'sfx').forEach(clip => {
+          const src = audioCtx.createBufferSource();
+          src.buffer = clip.audioBuffer;
+          src.connect(dest);
+          src.start(audioCtx.currentTime + clip.start);
+          sources.push(src);
+        });
+      }
 
-      const start = performance.now();
+      const startTime = performance.now();
+
       function renderStep(now) {
-        const elapsed = (now - start) / 1000;
+        const elapsed = (now - startTime) / 1000;
         state.currentTime = elapsed;
         updatePlayheadPosition();
         renderCanvasFrame();
 
         const pct = Math.min(100, Math.floor((elapsed / maxDuration) * 100));
         pFill.style.width = pct + '%';
-        pText.innerText = pct + '%';
+        const progressEl = document.getElementById('exportProgressText');
+        if (progressEl) progressEl.innerText = pct + '%';
 
         if (elapsed < maxDuration) {
           requestAnimationFrame(renderStep);
         } else {
-          recorder.stop();
+          // Зупиняємо аудіоджерела
           sources.forEach(s => { try { s.stop(); } catch(e){} });
+          
+          // Примусово зупиняємо всі треки стріму (щоб MediaRecorder не чекав вічно)
+          exportStream.getTracks().forEach(t => t.stop());
+          if (dest) dest.stream.getTracks().forEach(t => t.stop());
+
+          try { recorder.requestData(); } catch(e){}
+          if (recorder.state !== 'inactive') {
+            recorder.stop();
+          }
         }
       }
       requestAnimationFrame(renderStep);
     });
 
-    // Ініціалізація та завантаження локального стану
+    // Старт
     loadProjectFromDB();
     renderCanvasFrame();
   </script>
